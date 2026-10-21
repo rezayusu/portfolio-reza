@@ -224,6 +224,22 @@ body.dark .sidebar-nav::-webkit-scrollbar-thumb{background:rgba(226,246,138,.6)}
 @media(min-width:681px){.admin-layout>.admin-sidebar{position:-webkit-sticky;position:sticky;top:94px;align-self:start;height:calc(100vh - 110px);max-height:none;overflow-x:hidden;overflow-y:auto}}
 @media(max-width:680px){.admin-layout>.admin-sidebar{position:static;height:auto;max-height:none;overflow:visible}}
 
+.admin-confirm-dialog{width:min(420px,calc(100% - 32px));padding:30px;border:1px solid var(--line);border-radius:16px;background:var(--paper2);color:var(--ink);box-shadow:0 24px 80px rgba(15,23,42,.28);text-align:center}
+.admin-confirm-dialog::backdrop{background:rgba(15,23,42,.58);backdrop-filter:blur(4px)}
+.confirm-dialog-icon{display:grid;width:54px;height:54px;margin:0 auto 17px;place-items:center;border:1px solid color-mix(in srgb,#dc604f 30%,var(--line));border-radius:50%;background:color-mix(in srgb,#dc604f 12%,var(--paper2));color:#c74636;font:600 24px var(--display)}
+.confirm-dialog-eyebrow{margin:0 0 8px;color:var(--muted);font:10px var(--mono);letter-spacing:.14em}
+.admin-confirm-dialog h2{margin:0;color:var(--ink);font:600 24px/1.2 var(--display);letter-spacing:-.035em}
+.admin-confirm-dialog #adminConfirmDescription{margin:10px 0 24px;color:var(--muted);font:13px/1.6 var(--sans)}
+.confirm-dialog-actions{display:flex;justify-content:center;gap:10px}
+.confirm-dialog-actions button{min-height:42px;padding:0 18px;border:1px solid var(--line);border-radius:7px;font:500 12px var(--mono);cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.confirm-dialog-actions button:hover{transform:translateY(-1px)}
+.confirm-cancel-button{background:var(--paper);color:var(--ink)}
+.confirm-cancel-button:hover{border-color:var(--admin-hover);background:color-mix(in srgb,var(--admin-hover) 9%,var(--paper))}
+.confirm-delete-button{border-color:#c74636!important;background:#c74636;color:#fff}
+.confirm-delete-button:hover{border-color:#a93427!important;background:#a93427}
+.confirm-dialog-actions button:focus-visible{outline:3px solid color-mix(in srgb,var(--admin-hover) 45%,transparent);outline-offset:2px}
+@media(max-width:420px){.admin-confirm-dialog{padding:25px 20px}.confirm-dialog-actions button{padding:0 14px}}
+
 .admin-body{--ink:var(--admin-light-text,#343a40);--muted:color-mix(in srgb,var(--ink) 68%,white);--paper:var(--admin-light-panel,#fff);--paper2:var(--admin-light-panel,#fff);--line:#d7dde3;--shadow:0 8px 24px rgba(35,45,55,.08);--admin-blue-ink:var(--ink);--admin-sidebar-bg:var(--admin-light-sidebar,#343a40);--admin-sidebar-text:#f8f9fa;--admin-hover:var(--admin-light-hover,#2563eb);background:#f1f3f5;color:var(--ink)}
 .admin-body.dark{--ink:var(--admin-dark-text,#e5e7eb);--muted:color-mix(in srgb,var(--ink) 72%,#111827);--paper:var(--admin-dark-panel,#1f2937);--paper2:var(--admin-dark-panel,#1f2937);--line:#374151;--shadow:0 12px 30px rgba(0,0,0,.24);--admin-blue-ink:var(--ink);--admin-sidebar-bg:var(--admin-dark-sidebar,#111827);--admin-sidebar-text:#f3f4f6;--admin-hover:var(--admin-dark-hover,#3b82f6);background:#111827;color:var(--ink)}
 .admin-body .admin-sidebar{border:1px solid rgba(255,255,255,.08);border-radius:10px;background:var(--admin-sidebar-bg);color:var(--admin-sidebar-text);box-shadow:var(--shadow)}

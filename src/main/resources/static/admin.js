@@ -1,7 +1,15 @@
 const adminThemeToggle = document.querySelector("#adminThemeToggle");
 const adminThemeStorageKey = "portfolio-admin-theme";
+const adminConfirmDialog = document.querySelector("#adminConfirmDialog");
+const adminConfirmTitle = document.querySelector("#adminConfirmTitle");
+const adminConfirmDescription = document.querySelector("#adminConfirmDescription");
+const adminConfirmCancel = document.querySelector("#adminConfirmCancel");
+const adminConfirmDelete = document.querySelector("#adminConfirmDelete");
 let adminNoticeTimer;
 let adminNavigationController;
+let pendingDeleteForm;
+let pendingDeleteButton;
+let confirmedDeleteButton;
 
 function readSavedTheme() {
   try {
@@ -116,21 +124,6 @@ adminThemeToggle?.addEventListener("click", () => {
 document.addEventListener("click", event => {
   if (!(event.target instanceof Element)) return;
 
-  const deleteButton = event.target.closest(".button-delete");
-  if (deleteButton) {
-    const message = deleteButton.closest(".education-editor")
-      ? "Hapus riwayat pendidikan ini?"
-      : deleteButton.closest(".tool-editor")
-        ? "Hapus tool ini dari toolbox?"
-        : deleteButton.closest(".message-details")
-          ? "Hapus pesan ini secara permanen?"
-          : "Hapus project ini dari portfolio?";
-    if (!window.confirm(message)) {
-      event.preventDefault();
-    }
-    return;
-  }
-
   const link = event.target.closest(".sidebar-nav a[href]");
   if (!link || event.defaultPrevented || event.button !== 0 ||
       event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
@@ -142,6 +135,49 @@ document.addEventListener("click", event => {
   if (url.origin !== window.location.origin) return;
   event.preventDefault();
   void navigateAdmin(url.href, true);
+});
+
+document.addEventListener("submit", event => {
+  const deleteButton = event.submitter;
+  if (!(deleteButton instanceof HTMLButtonElement) || !deleteButton.matches(".button-delete")) return;
+  if (confirmedDeleteButton === deleteButton) {
+    confirmedDeleteButton = undefined;
+    return;
+  }
+
+  event.preventDefault();
+  pendingDeleteForm = deleteButton.form;
+  pendingDeleteButton = deleteButton;
+  if (deleteButton.closest(".education-editor")) {
+    adminConfirmTitle.textContent = "Hapus riwayat pendidikan?";
+  } else if (deleteButton.closest(".tool-editor")) {
+    adminConfirmTitle.textContent = "Hapus tool ini?";
+  } else if (deleteButton.closest(".message-details")) {
+    adminConfirmTitle.textContent = "Hapus pesan ini?";
+  } else {
+    adminConfirmTitle.textContent = "Hapus project ini?";
+  }
+  adminConfirmDescription.textContent = "Item yang dihapus tidak dapat dikembalikan.";
+  adminConfirmDialog.showModal();
+});
+
+adminConfirmCancel?.addEventListener("click", () => adminConfirmDialog.close());
+adminConfirmDelete?.addEventListener("click", () => {
+  if (!pendingDeleteForm || !pendingDeleteButton) return;
+
+  const form = pendingDeleteForm;
+  const button = pendingDeleteButton;
+  pendingDeleteForm = undefined;
+  pendingDeleteButton = undefined;
+  confirmedDeleteButton = button;
+  adminConfirmDialog.close();
+  form.requestSubmit(button);
+  if (confirmedDeleteButton === button) confirmedDeleteButton = undefined;
+});
+adminConfirmDialog?.addEventListener("close", () => {
+  if (pendingDeleteButton?.isConnected) pendingDeleteButton.focus();
+  pendingDeleteForm = undefined;
+  pendingDeleteButton = undefined;
 });
 
 window.addEventListener("popstate", () => {

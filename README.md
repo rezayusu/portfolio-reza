@@ -1,21 +1,6 @@
-# Scrapbook Developer Portfolio
+# Portfolio Reza
 
 Portfolio aesthetic scrapbook yang menggunakan HTML, Tailwind CSS (CDN), CSS custom, JavaScript, Spring Boot, Spring Security, Spring Data JPA, dan PostgreSQL. Aplikasi web statis ikut dipaketkan di dalam executable JAR Spring Boot.
-
-## Fitur
-- Responsive scrapbook-style portfolio.
-- Project list diambil dari PostgreSQL melalui `GET /api/projects`.
-- Project detail modal, theme toggle, mobile nav, scroll reveal, contact form.
-- Pesan kontak disimpan ke tabel `contact_messages`.
-- Masukan baru juga mengirim notifikasi email melalui SMTP ke alamat yang dikonfigurasi.
-- Endpoint admin untuk CRUD project dan membaca pesan, dilindungi Spring Security.
-- Dashboard Thymeleaf di `/admin` untuk mengubah pengenalan, bagian about, foto profil, warna portfolio, dan project langsung di PostgreSQL.
-- Timeline pendidikan dari SD sampai SMK dapat ditambah, diedit, dan dihapus dari dashboard; daftar ditampilkan kronologis di portfolio publik.
-- Sertifikat dapat ditambah, diedit, dan dihapus dari dashboard; data disimpan di PostgreSQL dan ditampilkan di portfolio publik.
-- Project dapat diedit/dihapus dan item toolbox dapat ditambah, diedit, dihapus melalui dashboard; daftar toolbox publik dibaca dari PostgreSQL.
-- Upload foto profil, logo navigasi portfolio/dashboard, dan gambar project (JPEG, PNG, GIF, WebP; maksimal 5 MB), disimpan di folder `uploads/`.
-- Validasi input di backend, BCrypt untuk password admin, CSRF tetap aktif untuk form kontak.
-- Tidak menyimpan credential database/admin di source code.
 
 ## Prasyarat
 - Java 25+ (latest LTS)
