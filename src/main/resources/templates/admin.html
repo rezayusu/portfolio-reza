@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css?v=29">
-  <link rel="stylesheet" href="/admin.css?v=33">
-  <script defer src="/admin.js?v=16"></script>
+  <link rel="stylesheet" href="/admin.css?v=34">
+  <script defer src="/admin.js?v=17"></script>
 </head>
 <body class="admin-body" th:attr="data-preview-mode=${previewMode}" th:style="|--admin-light-text:${content.adminLightText};--admin-light-sidebar:${content.adminLightSidebar};--admin-light-hover:${content.adminLightHover};--admin-light-panel:${content.adminLightPanel};--admin-dark-text:${content.adminDarkText};--admin-dark-sidebar:${content.adminDarkSidebar};--admin-dark-hover:${content.adminDarkHover};--admin-dark-panel:${content.adminDarkPanel}|">
   <div class="paper-grain" aria-hidden="true"></div>
@@ -350,5 +350,15 @@
       </div>
     </div>
   </main>
+  <dialog class="admin-confirm-dialog" id="adminConfirmDialog" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmDescription">
+    <div class="confirm-dialog-icon" aria-hidden="true">!</div>
+    <p class="confirm-dialog-eyebrow">PLEASE CONFIRM</p>
+    <h2 id="adminConfirmTitle">Hapus item ini?</h2>
+    <p id="adminConfirmDescription">Item yang dihapus tidak dapat dikembalikan.</p>
+    <div class="confirm-dialog-actions">
+      <button class="confirm-cancel-button" id="adminConfirmCancel" type="button">Batal</button>
+      <button class="confirm-delete-button" id="adminConfirmDelete" type="button">Ya, hapus</button>
+    </div>
+  </dialog>
 </body>
 </html>
