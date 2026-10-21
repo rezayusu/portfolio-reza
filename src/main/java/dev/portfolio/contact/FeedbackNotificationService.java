@@ -37,6 +37,7 @@ public class FeedbackNotificationService {
         SimpleMailMessage email = new SimpleMailMessage();
         email.setFrom(senderAddress);
         email.setTo(recipientAddress);
+        email.setReplyTo(message.getEmail());
         email.setSubject("New portfolio feedback");
         email.setText(
             "You received a new message from your portfolio.\n\n"

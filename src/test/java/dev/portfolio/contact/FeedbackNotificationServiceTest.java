@@ -29,6 +29,7 @@ class FeedbackNotificationServiceTest {
         assertThat(sent).isTrue();
         assertThat(email.getValue().getTo()).containsExactly("rezayusuf651@gmail.com");
         assertThat(email.getValue().getFrom()).isEqualTo("sender@gmail.com");
+        assertThat(email.getValue().getReplyTo()).isEqualTo("visitor@example.com");
         assertThat(email.getValue().getText()).contains("visitor@example.com", "A suggestion.");
     }
 
