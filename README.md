@@ -7,6 +7,7 @@ Portfolio aesthetic scrapbook yang menggunakan HTML, Tailwind CSS (CDN), CSS cus
 - Project list diambil dari PostgreSQL melalui `GET /api/projects`.
 - Project detail modal, theme toggle, mobile nav, scroll reveal, contact form.
 - Pesan kontak disimpan ke tabel `contact_messages`.
+- Masukan baru juga mengirim notifikasi email melalui SMTP ke alamat yang dikonfigurasi.
 - Endpoint admin untuk CRUD project dan membaca pesan, dilindungi Spring Security.
 - Dashboard Thymeleaf di `/admin` untuk mengubah pengenalan, bagian about, foto profil, warna portfolio, dan project langsung di PostgreSQL.
 - Timeline pendidikan dari SD sampai SMK dapat ditambah, diedit, dan dihapus dari dashboard; daftar ditampilkan kronologis di portfolio publik.
@@ -50,6 +51,10 @@ $env:COOKIE_SECURE="false"
 Di Linux/macOS gunakan `export NAME=value` jika tidak memakai `.env`.
 
 Jangan masukkan password asli ke Git, screenshot, atau file konfigurasi yang dibagikan. Untuk production, gunakan secret manager dan set `COOKIE_SECURE=true` jika berjalan di belakang HTTPS.
+
+### Notifikasi email masukan
+
+Untuk Gmail, aktifkan verifikasi 2 langkah lalu buat Google App Password. Isi `MAIL_USERNAME` dengan alamat Gmail pengirim dan `MAIL_APP_PASSWORD` dengan App Password tersebut di `.env` lokal atau secret manager deployment. Jangan gunakan password akun Gmail biasa. `FEEDBACK_NOTIFICATION_TO` secara default diarahkan ke `rezayusuf651@gmail.com`; ubah hanya jika ingin menerima notifikasi di alamat lain. Jika SMTP belum dikonfigurasi atau pengiriman gagal, pesan tetap tersimpan dan form akan menampilkan status bahwa notifikasi email belum terkirim.
 
 ## 3. Jalankan mode development
 
