@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns="https://www.w3.org/1999/xhtml/"
+ xmlns:th="https://www.thymeleaf.org/">
+ <head>
+ <title>GFG3</title>
+ </head>
+ <body>
+ <h1>Welcome to GeeksForGeeks...</h1>
+ <form method="POST" th:object="${ops}">
+ 
+        <div><label for="first">First OS</label></div>
+        <input id="first"  type="text" th:field="*{OS1}" />
+        
+        <div><label for="second">Second OS</label></div>
+        <input id="second"  type="text" th:field="*{OS2}" />
+        
+        <div><label for="third">Third OS</label></div>
+        <input id="third"  type="text" th:field="*{OS3}" />
+   
+        <input type="submit" value="Send" />
+   
+ </form>
+ </body>
+ </html>
