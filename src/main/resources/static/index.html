@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f0e5">
+  <meta name="_csrf" content="">
+  <meta name="_csrf_header" content="">
+  <title>Reza — Creative Developer</title>
+  <meta name="description" content="Creative developer portfolio — experiments, projects, and little things made with code.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/styles.css?v=31">
+  <script defer src="/color-bends.js?v=3"></script>
+  <script defer src="/app.js?v=20"></script>
+  <script defer src="/tech-text.js?v=1"></script>
+</head>
+<body>
+  <canvas id="colorBends" class="color-bends-background" aria-hidden="true"></canvas>
+  <div class="paper-grain" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="Reza home"><span class="brand-mark" id="brandMark" data-logo-mark></span><span id="brandName">Reza</span></a>
+    <button id="menuToggle" class="menu-toggle" aria-expanded="false" aria-controls="mainNav">menu <span>↗</span></button>
+    <nav id="mainNav" class="nav-links">
+      <a href="#about">about</a><a href="#education">education</a><a href="#certificates">certificates</a><a href="#projects">projects</a><a href="#toolbox">toolbox</a><a href="#contact">contact</a>
+      <button id="themeToggle" class="theme-toggle" aria-label="Switch to dark mode" aria-pressed="false" title="Toggle theme">☼</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="hero section-wrap">
+      <div class="hero-copy reveal">
+        <p class="eyebrow"><span class="status-dot"></span> FULL-STACK DEVELOPER</p>
+        <h1 class="tech-text-heading">Hey, I'm <span class="name-highlight" id="displayName">Reza</span><span class="scribble">✳</span><br><span id="heroLine">and I make</span><br><span class="outline-text" id="heroTagline">things with code.</span></h1>
+        <p class="hero-description" id="heroDescription">A developer in progress collecting little ideas, building useful things, and turning coffee-fueled curiosity into real projects.</p>
+        <div class="hero-actions"><a class="button-primary" href="#projects">Explore my work <span>↘</span></a><a class="text-link" href="#about">A little about me ↗</a></div>
+      </div>
+      <div class="hero-art reveal">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="hero-note note-top"><span>✷ currently building</span><strong>my next big idea</strong></div>
+        <div class="code-card">
+          <div class="window-bar"><i></i><i></i><i></i><span>hello-world.js</span></div>
+          <pre><code><span class="code-purple">const</span> developer = {
+  name: <span class="code-green" id="codeName">'Reza'</span>,
+  curious: <span class="code-orange">true</span>,
+  loves: [<span class="code-green">'design'</span>, <span class="code-green">'code'</span>],
+  learning: <span class="code-green">'everyday'</span>
+};
+
+developer.<span class="code-blue">build</span>();<span class="cursor">▍</span></code></pre>
+        </div>
+        <div class="sticker sticker-star">✳</div><div class="sticker sticker-hi">HELLO<br>WORLD!</div>
+        <div class="tape"></div>
+        <p class="handwritten art-caption">made with curiosity ♡</p>
+      </div>
+      <a class="scroll-cue" href="#about"><span>↓</span> SCROLL TO EXPLORE</a>
+    </section>
+
+    <section id="about" class="section-wrap section-block">
+      <div class="section-label"><span>01 / ABOUT ME</span><span class="label-line"></span><span>THE PERSON BEHIND THE PIXELS</span></div>
+      <div class="about-grid">
+        <div class="about-photo reveal">
+          <div class="polaroid">
+            <div class="photo-placeholder"><img id="aboutPhoto" alt="Profile portrait"><img id="aboutPhotoSecond" alt="Second profile portrait"><span class="photo-sun">☼</span><span class="photo-initial" id="photoInitial">R</span><span class="photo-spark">✦</span></div>
+            <p class="handwritten">probably debugging something ↗</p>
+          </div>
+          <span class="tape photo-tape"></span><span class="tiny-doodle"> that's me!</span>
+        </div>
+        <div class="about-copy reveal">
+          <p class="eyebrow">NICE TO MEET YOU!</p>
+          <h2 id="aboutHeadline">Part developer, part creative thinker.</h2>
+          <p id="aboutDescription">I'm learning how to build things for the web, from playful interfaces to applications that solve real problems. I love when thoughtful design meets code that works.</p>
+          <p id="aboutExtraDescription">This little corner of the internet is my digital scrapbook — a home for experiments, projects, lessons, and happy accidents.</p>
+          <div class="fact-pills"><span>☕ curious mind</span><span>⌘ code learner</span><span>✎ visual thinker</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="education" class="section-wrap section-block education-section">
+      <div class="section-label"><span>02 / EDUCATION</span><span class="label-line"></span><span>A LITTLE LEARNING JOURNEY</span></div>
+      <div class="projects-heading"><div><p class="eyebrow">FROM FIRST LESSONS TO NOW</p><h2>Places that<br><span class="marker-highlight">shaped me.</span></h2></div></div>
+      <div id="educationTimeline" class="education-timeline" aria-live="polite"><p class="loading-note">Gathering education history...</p></div>
+    </section>
+
+    <section id="certificates" class="section-wrap section-block certificate-section">
+      <div class="section-label"><span>03 / CERTIFICATES</span><span class="label-line"></span><span>PROOF OF WHAT I'VE LEARNED</span></div>
+      <div class="projects-heading"><div><p class="eyebrow">A GROWING COLLECTION</p><h2>Learning, made<br><span class="marker-highlight">official.</span></h2></div><p class="heading-aside handwritten">little milestones, big motivation ↙</p></div>
+      <div id="certificateGrid" class="certificate-grid" aria-live="polite"><p class="loading-note">Gathering certificates...</p></div>
+    </section>
+
+    <section id="projects" class="section-wrap section-block">
+      <div class="section-label"><span>04 / SELECTED WORK</span><span class="label-line"></span><span>A FEW THINGS I MADE</span></div>
+      <div class="projects-heading"><div><p class="eyebrow">THE PROJECT SCRAPBOOK</p><h2>Little ideas,<br><span class="marker-highlight">real projects.</span></h2></div><p class="heading-aside handwritten">click a card to peek inside ↙</p></div>
+      <div id="projectGrid" class="project-grid" aria-live="polite"><p class="loading-note">Collecting projects...</p></div>
+    </section>
+
+    <section id="toolbox" class="section-wrap section-block">
+      <div class="section-label"><span>05 / MY TOOLBOX</span><span class="label-line"></span><span>TOOLS I TINKER WITH</span></div>
+      <div class="toolbox-panel reveal">
+        <div><p class="eyebrow">CURRENTLY ON MY DESK</p><h2>My digital<br><span class="marker-highlight">toolbox.</span></h2><p class="muted">A growing collection. Always learning something new.</p></div>
+        <div id="toolboxGrid" class="tool-stickers" aria-live="polite"><span class="loading-note">Gathering my tools...</span></div>
+      </div>
+    </section>
+
+    <section id="contact" class="section-wrap section-block contact-section">
+      <div class="section-label"><span>06 / SAY HELLO</span><span class="label-line"></span><span>YOUR TURN, INTERNET FRIEND</span></div>
+      <div class="contact-grid">
+        <div class="contact-copy reveal"><p class="eyebrow">GOT A LITTLE IDEA?</p><h2>Let's make<br>something <span class="marker-highlight">good.</span></h2><p>Have a project, a question, or just want to say hi? Drop a note in my inbox-shaped corner.</p><p class="handwritten contact-signoff">until then, keep creating ✿</p><div class="contact-doodles" aria-hidden="true"><span class="contact-doodle-star doodle-star-one">✳</span><span class="contact-doodle-star doodle-star-two">✦</span><span class="contact-doodle-star doodle-star-three">✷</span><span class="doodle-sparkle">✧</span><span class="doodle-note"><span text-align="center">code with logic</span><strong>grow with innovation</strong></span><span class="doodle-tape"></span></div></div>
+        <form id="contactForm" class="contact-form reveal">
+          <label for="name">Your name</label><input id="name" name="name" maxlength="80" required placeholder="What should I call you?">
+          <label for="email">Email address</label><input id="email" name="email" type="email" maxlength="160" required placeholder="you@example.com">
+          <label for="message">Your message</label><textarea id="message" name="message" maxlength="2000" rows="4" required placeholder="Tell me what's on your mind..."></textarea>
+          <button class="button-primary submit-button" type="submit">Send a little note <span>↗</span></button>
+          <p id="formStatus" class="form-status" role="status"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><a class="brand" href="#home"><span class="brand-mark" id="footerBrandMark" data-logo-mark>r.</span><span>made slowly, with care</span></a><p>© <span id="year"></span> <span id="footerName">Reza</span> · built with HTML, CSS, JS & Spring Boot</p><nav class="footer-links" aria-label="Contact and social links"><a id="whatsappLink" class="footer-social-link" aria-label="WhatsApp" title="WhatsApp" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.8a8.3 8.3 0 0 1-12.3 7.3L3 20.5l1.4-5a8.3 8.3 0 1 1 16.1-3.7Z"/><path d="M8.7 8.2c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.7 1.7c.1.2.1.4-.1.6l-.5.7c-.2.2-.2.4 0 .6.5.8 1.2 1.4 2 1.8.2.1.4.1.6-.1l.7-.8c.2-.2.4-.2.6-.1l1.6.8c.3.1.4.3.4.5 0 .3-.2 1.2-.8 1.6-.5.4-1.1.6-1.8.4-1-.2-2.2-.8-3.4-1.8-1-.9-1.8-2.1-2.1-3.1-.3-.9 0-1.7.3-2.2Z"/></svg></a><a id="instagramLink" class="footer-social-link" aria-label="Instagram" title="Instagram" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="icon-fill" cx="17.6" cy="6.8" r="1"/></svg></a><a id="tiktokLink" class="footer-social-link" aria-label="TikTok" title="TikTok" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3v11.2a4.1 4.1 0 1 1-3.5-4.1"/><path d="M14 3c.5 3.4 2.6 5.3 6 5.5"/></svg></a></nav><div class="footer-utility-links"><a href="/admin" class="back-top">admin ↗</a><a href="#home" class="back-top">back to top ↑</a></div></footer>
+
+  <dialog id="projectDialog" class="project-dialog">
+    <button id="closeDialog" class="dialog-close" aria-label="Close project details">×</button>
+    <div id="dialogContent"></div>
+  </dialog>
+</body>
+</html>
