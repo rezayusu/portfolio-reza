@@ -13,6 +13,9 @@ import dev.portfolio.project.ProjectRepository;
 import dev.portfolio.toolbox.ToolboxItem;
 import dev.portfolio.toolbox.ToolboxRepository;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.ArrayList;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
@@ -105,13 +108,13 @@ public class AdminController {
     }
 
     private void bindToolFields(WebDataBinder binder) {
-        binder.setAllowedFields("name", "badge", "accentColor");
+        binder.setAllowedFields("name", "badge", "badgeImageUrl", "badgeLink", "accentColor");
         binder.registerCustomEditor(String.class, new StringTrimmerEditor(true));
     }
 
     private void bindProjectFields(WebDataBinder binder) {
         binder.setAllowedFields(
-            "title", "description", "category", "imageUrl", "projectUrl",
+            "title", "description", "category", "imageUrl", "galleryUrls", "projectUrl",
             "techStack", "featured", "accentColor");
         binder.registerCustomEditor(String.class, new StringTrimmerEditor(true));
     }
@@ -298,6 +301,7 @@ public class AdminController {
             @Valid @ModelAttribute("newProject") Project project,
             BindingResult result,
             @RequestParam(name = "photo", required = false) MultipartFile photo,
+            @RequestParam(name = "galleryPhotos", required = false) List<MultipartFile> galleryPhotos,
             RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("notice", "Periksa kembali isian project; judul, deskripsi, kategori, dan warna wajib valid.");
@@ -306,6 +310,19 @@ public class AdminController {
         String uploadedImage = imageStorage.store(photo);
         if (uploadedImage != null) {
             project.setImageUrl(uploadedImage);
+        }
+        if (galleryPhotos != null && !galleryPhotos.isEmpty()) {
+            List<String> storedUrls = new ArrayList<>();
+            if (project.getGalleryUrls() != null && !project.getGalleryUrls().isBlank()) {
+                storedUrls.add(project.getGalleryUrls());
+            }
+            for (MultipartFile gp : galleryPhotos) {
+                String stored = imageStorage.store(gp);
+                if (stored != null) {
+                    storedUrls.add(stored);
+                }
+            }
+            project.setGalleryUrls(String.join(", ", storedUrls));
         }
         projectRepository.save(project);
         redirectAttributes.addFlashAttribute("notice", "Project berhasil ditambahkan.");
@@ -318,6 +335,7 @@ public class AdminController {
             @Valid @ModelAttribute("project") Project input,
             BindingResult result,
             @RequestParam(name = "photo", required = false) MultipartFile photo,
+            @RequestParam(name = "galleryPhotos", required = false) List<MultipartFile> galleryPhotos,
             RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("notice", "Periksa kembali isian project; judul, deskripsi, kategori, dan warna wajib valid.");
@@ -331,6 +349,23 @@ public class AdminController {
         existing.setDescription(input.getDescription());
         existing.setCategory(input.getCategory());
         existing.setImageUrl(uploadedImage == null ? input.getImageUrl() : uploadedImage);
+
+        List<String> storedGallery = new ArrayList<>();
+        if (input.getGalleryUrls() != null && !input.getGalleryUrls().isBlank()) {
+            storedGallery.add(input.getGalleryUrls().trim());
+        }
+        if (galleryPhotos != null && !galleryPhotos.isEmpty()) {
+            for (MultipartFile gp : galleryPhotos) {
+                if (gp != null && !gp.isEmpty()) {
+                    String stored = imageStorage.store(gp);
+                    if (stored != null) {
+                        storedGallery.add(stored);
+                    }
+                }
+            }
+        }
+        existing.setGalleryUrls(String.join(", ", storedGallery));
+
         existing.setProjectUrl(input.getProjectUrl());
         existing.setTechStack(input.getTechStack());
         existing.setFeatured(input.isFeatured());
@@ -349,6 +384,8 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("notice", "Isi nama tool, badge, dan warna dengan benar.");
             return "redirect:/admin/toolbox";
         }
+        if (tool.getBadgeImageUrl() == null) tool.setBadgeImageUrl("");
+        if (tool.getBadgeLink() == null) tool.setBadgeLink("");
         toolboxRepository.save(tool);
         redirectAttributes.addFlashAttribute("notice", "Tool berhasil ditambahkan ke toolbox.");
         return "redirect:/admin/toolbox";
@@ -503,6 +540,8 @@ public class AdminController {
                 org.springframework.http.HttpStatus.NOT_FOUND));
         existing.setName(input.getName());
         existing.setBadge(input.getBadge());
+        existing.setBadgeImageUrl(input.getBadgeImageUrl() == null ? "" : input.getBadgeImageUrl());
+        existing.setBadgeLink(input.getBadgeLink() == null ? "" : input.getBadgeLink());
         existing.setAccentColor(input.getAccentColor());
         toolboxRepository.save(existing);
         redirectAttributes.addFlashAttribute("notice", "Toolbox berhasil diperbarui.");

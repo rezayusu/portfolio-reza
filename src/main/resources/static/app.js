@@ -134,7 +134,7 @@ async function loadSiteContent() {
     $("#aboutExtraDescription").textContent = content.aboutExtraDescription;
     setFooterSocialLink("#whatsappLink", content.whatsappUrl);
     setFooterSocialLink("#instagramLink", content.instagramUrl);
-    setFooterSocialLink("#tiktokLink", content.tiktokUrl);
+    setFooterSocialLink("#githubLink", content.githubUrl);
     document.documentElement.style.setProperty("--coral", content.primaryColor);
     document.documentElement.style.setProperty("--sage", content.accentColor);
     document.documentElement.style.setProperty("--paper", content.backgroundColor);
@@ -180,7 +180,16 @@ async function loadToolbox() {
     }
     toolboxGrid.innerHTML = tools.map(tool => {
       const color = /^#[0-9a-fA-F]{6}$/.test(tool.accentColor || "") ? tool.accentColor : "#f4d66d";
-      return `<span class="tool-sticker" style="--tool-color:${color}"><b class="tool-mark" aria-hidden="true">${escapeHtml(tool.badge)}</b><span class="tool-name">${escapeHtml(tool.name)}</span></span>`;
+      const icon = safeUrl(tool.badgeImageUrl || "");
+      const link = safeUrl(tool.badgeLink || "");
+      const mark = icon
+        ? `<span class="tool-mark tool-icon"><img loading="lazy" src="${escapeHtml(icon)}" alt="${escapeHtml(tool.name)} icon"></span>`
+        : `<b class="tool-mark">${escapeHtml(tool.badge || "★")}</b>`;
+      const sticker = `${mark}<span class="tool-name">${escapeHtml(tool.name)}</span>`;
+      if (link) {
+        return `<a class="tool-sticker is-linked" style="--tool-color:${color}" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">${sticker}</a>`;
+      }
+      return `<span class="tool-sticker" style="--tool-color:${color}">${sticker}</span>`;
     }).join("");
     observeMotionElements(toolboxGrid);
   } catch (error) {
@@ -294,15 +303,37 @@ async function loadProjects() {
       card.addEventListener("click", () => {
         const project = projectsCache.find(item => item.id === Number(card.dataset.projectId));
         if (!project) return;
-        const image = safeUrl(project.imageUrl || "");
+        const mainImage = safeUrl(project.imageUrl || "");
+        const rawGallery = (project.galleryUrls || "").split(/[,;\n]+/).map(s => safeUrl(s.trim())).filter(Boolean);
+        const images = [mainImage, ...rawGallery].filter((img, idx, arr) => img && arr.indexOf(img) === idx);
         const link = safeUrl(project.projectUrl || "");
+
         dialogContent.innerHTML = `
           <span class="project-category">${escapeHtml(project.category)}</span>
           <h2 class="dialog-title">${escapeHtml(project.title)}</h2>
-          ${image ? `<img class="dialog-image" src="${escapeHtml(image)}" alt="${escapeHtml(project.title)} preview">` : ""}
+          <div class="dialog-gallery-container">
+            <div class="dialog-active-shot-wrap">
+              <img id="dialogActiveShot" class="dialog-image" src="${images[0] || ''}" alt="${escapeHtml(project.title)} preview" ${images.length ? '' : 'style="display:none"'}>
+            </div>
+            ${images.length > 1 ? `
+              <div class="dialog-thumbs" aria-label="Screenshot gallery">
+                ${images.map((img, i) => `<button type="button" class="dialog-thumb-btn ${i === 0 ? 'is-active' : ''}" data-img-src="${escapeHtml(img)}"><img src="${escapeHtml(img)}" alt="Screenshot ${i+1}" loading="lazy"></button>`).join("")}
+              </div>
+            ` : ''}
+          </div>
           <p class="dialog-description">${escapeHtml(project.description)}</p>
           <p class="tech-tags">${(project.techStack || "").split(",").map(t => `<span>${escapeHtml(t.trim())}</span>`).join("")}</p>
           ${link ? `<a class="dialog-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Visit project ↗</a>` : '<p class="dialog-description">Project link coming soon.</p>'}`;
+
+        const activeShot = dialogContent.querySelector("#dialogActiveShot");
+        dialogContent.querySelectorAll(".dialog-thumb-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            dialogContent.querySelectorAll(".dialog-thumb-btn").forEach(b => b.classList.remove("is-active"));
+            btn.classList.add("is-active");
+            if (activeShot) activeShot.src = btn.dataset.imgSrc;
+          });
+        });
+
         dialog.showModal();
       });
     });

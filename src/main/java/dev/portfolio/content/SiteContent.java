@@ -75,6 +75,11 @@ public class SiteContent {
     @Size(max = 500)
     @Pattern(regexp = "^(https?://[^\\s]+)?$")
     @Column(length = 500)
+    private String githubUrl = "";
+
+    @Size(max = 500)
+    @Pattern(regexp = "^(https?://[^\\s]+)?$")
+    @Column(length = 500)
     private String tiktokUrl = "";
 
     @NotBlank
@@ -131,6 +136,7 @@ public class SiteContent {
     public String getLogoUrl() { return logoUrl; }
     public String getWhatsappUrl() { return whatsappUrl; }
     public String getInstagramUrl() { return instagramUrl; }
+    public String getGithubUrl() { return githubUrl; }
     public String getTiktokUrl() { return tiktokUrl; }
     public String getPrimaryColor() { return primaryColor; }
     public String getAccentColor() { return accentColor; }
@@ -164,6 +170,7 @@ public class SiteContent {
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
     public void setWhatsappUrl(String whatsappUrl) { this.whatsappUrl = whatsappUrl; }
     public void setInstagramUrl(String instagramUrl) { this.instagramUrl = instagramUrl; }
+    public void setGithubUrl(String githubUrl) { this.githubUrl = githubUrl; }
     public void setTiktokUrl(String tiktokUrl) { this.tiktokUrl = tiktokUrl; }
     public void setPrimaryColor(String primaryColor) { this.primaryColor = primaryColor; }
     public void setAccentColor(String accentColor) { this.accentColor = accentColor; }

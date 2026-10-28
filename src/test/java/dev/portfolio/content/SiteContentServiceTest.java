@@ -34,7 +34,7 @@ class SiteContentServiceTest {
         input.setLogoUrl("/uploads/logo.png");
         input.setWhatsappUrl("https://wa.me/628123456789");
         input.setInstagramUrl("https://instagram.com/rezadev");
-        input.setTiktokUrl("https://tiktok.com/@rezadev");
+        input.setGithubUrl("https://github.com/rezadev");
         input.setPrimaryColor("#112233");
         input.setAccentColor("#445566");
         input.setBackgroundColor("#778899");
@@ -56,7 +56,7 @@ class SiteContentServiceTest {
         assertThat(saved.getLogoUrl()).isEqualTo("/uploads/logo.png");
         assertThat(saved.getWhatsappUrl()).isEqualTo("https://wa.me/628123456789");
         assertThat(saved.getInstagramUrl()).isEqualTo("https://instagram.com/rezadev");
-        assertThat(saved.getTiktokUrl()).isEqualTo("https://tiktok.com/@rezadev");
+        assertThat(saved.getGithubUrl()).isEqualTo("https://github.com/rezadev");
         assertThat(saved.getPrimaryColor()).isEqualTo("#112233");
         assertThat(saved.getAccentColor()).isEqualTo("#445566");
         assertThat(saved.getBackgroundColor()).isEqualTo("#778899");

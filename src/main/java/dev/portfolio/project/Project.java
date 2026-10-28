@@ -28,6 +28,10 @@ public class Project {
     @Column(length = 500)
     private String imageUrl;
 
+    @Size(max = 2000)
+    @Column(length = 2000)
+    private String galleryUrls = "";
+
     @Size(max = 500)
     @Column(length = 500)
     private String projectUrl;
@@ -61,6 +65,7 @@ public class Project {
     public String getDescription() { return description; }
     public String getCategory() { return category; }
     public String getImageUrl() { return imageUrl; }
+    public String getGalleryUrls() { return galleryUrls; }
     public String getProjectUrl() { return projectUrl; }
     public String getTechStack() { return techStack; }
     public boolean isFeatured() { return featured; }
@@ -70,6 +75,7 @@ public class Project {
     public void setDescription(String description) { this.description = description; }
     public void setCategory(String category) { this.category = category; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setGalleryUrls(String galleryUrls) { this.galleryUrls = galleryUrls; }
     public void setProjectUrl(String projectUrl) { this.projectUrl = projectUrl; }
     public void setTechStack(String techStack) { this.techStack = techStack; }
     public void setFeatured(boolean featured) { this.featured = featured; }

@@ -33,7 +33,7 @@ public class SiteContentService {
         content.setLogoUrl(input.getLogoUrl());
         content.setWhatsappUrl(input.getWhatsappUrl());
         content.setInstagramUrl(input.getInstagramUrl());
-        content.setTiktokUrl(input.getTiktokUrl());
+        content.setGithubUrl(input.getGithubUrl());
         content.setPrimaryColor(input.getPrimaryColor());
         content.setAccentColor(input.getAccentColor());
         content.setBackgroundColor(input.getBackgroundColor());

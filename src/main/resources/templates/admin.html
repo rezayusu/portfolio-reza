@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css?v=29">
   <link rel="stylesheet" href="/admin.css?v=34">
-  <script defer src="/admin.js?v=17"></script>
+  <script defer src="/admin.js?v=18"></script>
 </head>
 <body class="admin-body" th:attr="data-preview-mode=${previewMode}" th:style="|--admin-light-text:${content.adminLightText};--admin-light-sidebar:${content.adminLightSidebar};--admin-light-hover:${content.adminLightHover};--admin-light-panel:${content.adminLightPanel};--admin-dark-text:${content.adminDarkText};--admin-dark-sidebar:${content.adminDarkSidebar};--admin-dark-hover:${content.adminDarkHover};--admin-dark-panel:${content.adminDarkPanel}|">
   <div class="paper-grain" aria-hidden="true"></div>
@@ -241,6 +241,8 @@
           <label class="field-wide">Description<textarea th:field="*{description}" maxlength="1000" rows="3" required></textarea></label>
           <label class="field-wide file-upload-label">Project photo<input name="photo" type="file" accept="image/png,image/jpeg,image/gif,image/webp"><small>PNG, JPG, GIF, or WebP · max 5 MB</small></label>
           <label class="field-wide">Or use an image URL<input type="text" inputmode="url" th:field="*{imageUrl}" maxlength="500" placeholder="https://example.com/project.jpg"></label>
+          <label class="field-wide file-upload-label">Multi-image Gallery Photos (pilih banyak foto sekaligus)<input name="galleryPhotos" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp"><small>Pilih beberapa foto sekaligus untuk galeri screenshot project.</small></label>
+          <label class="field-wide">Atau tambahkan URL Gallery (pisahkan dengan koma)<textarea th:field="*{galleryUrls}" maxlength="2000" rows="2" placeholder="https://.../img1.jpg, https://.../img2.jpg"></textarea></label>
           <label>Project link<input type="url" th:field="*{projectUrl}" maxlength="500" placeholder="https://example.com"></label>
           <label>Tools / technologies<input th:field="*{techStack}" maxlength="300" placeholder="Java, Spring Boot, PostgreSQL"></label>
           <label class="color-field project-color-field"><input type="color" th:field="*{accentColor}"><span><strong>Card color</strong><small>Project card accent</small></span></label>
@@ -269,6 +271,8 @@
               <label class="field-wide">Description<textarea name="description" maxlength="1000" rows="3" required th:text="${project.description}"></textarea></label>
               <label class="field-wide file-upload-label">Replace project photo<input name="photo" type="file" accept="image/png,image/jpeg,image/gif,image/webp"><small th:text="${#strings.startsWith(project.imageUrl ?: '', '/uploads/')} ? 'Current image is uploaded locally. Choose a file to replace it.' : 'PNG, JPG, GIF, or WebP · max 5 MB'">PNG, JPG, GIF, or WebP · max 5 MB</small></label>
               <label class="field-wide">Or use an image URL<input type="text" inputmode="url" name="imageUrl" th:value="${project.imageUrl}" maxlength="500"></label>
+              <label class="field-wide file-upload-label">Add Multi-image Gallery Photos (pilih banyak foto sekaligus)<input name="galleryPhotos" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp"><small>Pilih beberapa foto sekaligus untuk menambah galeri screenshot.</small></label>
+              <label class="field-wide">Gallery URLs (pisahkan dengan koma)<textarea name="galleryUrls" maxlength="2000" rows="2" th:text="${project.galleryUrls}" placeholder="https://.../img1.jpg, https://.../img2.jpg"></textarea></label>
               <label>Project link<input type="url" name="projectUrl" th:value="${project.projectUrl}" maxlength="500"></label>
               <label>Tools / technologies<input name="techStack" th:value="${project.techStack}" maxlength="300"></label>
               <label class="color-field project-color-field"><input type="color" name="accentColor" th:value="${project.accentColor}"><span><strong>Card color</strong><small>Project card accent</small></span></label>
@@ -289,8 +293,21 @@
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <h3><span class="editor-mark">＋</span> Add a tool</h3>
         <div class="form-grid">
-          <label>Tool name<input th:field="*{name}" maxlength="60" required placeholder="TypeScript"></label>
-          <label>Sticker badge<input th:field="*{badge}" maxlength="16" required placeholder="TS"></label>
+          <label>Tool name<input th:field="*{name}" id="newToolName" maxlength="60" required placeholder="TypeScript"></label>
+          <label>Sticker badge text<input th:field="*{badge}" id="newToolBadge" maxlength="16" required placeholder="TS"></label>
+          <label class="field-wide badge-icon-field">Icon badge (Logo)
+            <div class="badge-picker-header">
+              <input th:field="*{badgeImageUrl}" type="url" maxlength="255" placeholder="Pilih dari galeri di bawah atau isi URL…">
+              <button type="button" class="badge-picker-toggle">Pilih dari Galeri Icon ▾</button>
+            </div>
+            <div class="badge-picker">
+              <div class="badge-picker-content is-collapsed">
+                <div class="badge-picker-search-row"><input class="badge-picker-search" type="search" placeholder="Cari icon… (mis. java, react, docker)" autocomplete="off"><button type="button" class="badge-picker-clear" title="Hapus icon" aria-label="Hapus icon pilihan">✕</button></div>
+                <div class="badge-picker-grid" aria-label="Galeri icon" role="listbox"></div>
+              </div>
+            </div>
+          </label>
+          <label class="field-wide">Link saat icon diklik (opsional)<input th:field="*{badgeLink}" type="url" maxlength="255" placeholder="https://spring.io"></label>
           <label class="color-field project-color-field"><input type="color" th:field="*{accentColor}"><span><strong>Sticker color</strong><small>Toolbox accent</small></span></label>
         </div>
         <div class="form-actions"><span class="field-hint">A short text or emoji works best for the badge.</span><button class="button-primary" type="submit">Add tool <span>↗</span></button></div>
@@ -301,17 +318,30 @@
           <div class="record-table-head toolbox-record-columns"><span>Tool</span><span>Badge</span><span>Color</span><span></span></div>
           <details class="record-item tool-editor" th:each="tool : ${tools}">
             <summary class="record-summary toolbox-record-columns">
-              <span class="record-primary"><span class="record-tool-dot" th:style="|--tool-color:${tool.accentColor}|" th:text="${tool.badge}">5</span><span class="record-main-copy"><strong th:text="${tool.name}">Tool name</strong><small>Toolbox item</small></span></span>
+              <span class="record-primary"><span class="record-tool-dot" th:style="|--tool-color:${tool.accentColor}|"><img th:if="${!#strings.isEmpty(tool.badgeImageUrl)}" th:src="${tool.badgeImageUrl}" th:alt="${tool.name}" loading="lazy"><b th:if="${#strings.isEmpty(tool.badgeImageUrl)}" th:text="${tool.badge}">TS</b></span><span class="record-main-copy"><strong th:text="${tool.name}">Tool name</strong><small>Toolbox item</small></span></span>
               <span class="record-cell" th:text="${tool.badge}">TS</span>
               <span class="record-cell record-color-value"><i th:style="|--tool-color:${tool.accentColor}|"></i><span th:text="${tool.accentColor}">#f4d66d</span></span>
               <span class="record-edit-label">Edit <b aria-hidden="true">＋</b></span>
             </summary>
             <form class="record-edit-form project-editor" th:action="@{/admin/toolbox/{id}(id=${tool.id})}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <div class="tool-sticker-preview" th:style="|--tool-color:${tool.accentColor}|"><span th:text="${tool.name}">HTML</span><b th:text="${tool.badge}">5</b></div>
+            <div class="tool-sticker-preview" th:style="|--tool-color:${tool.accentColor}|"><span th:text="${tool.name}">HTML</span><img th:if="${!#strings.isEmpty(tool.badgeImageUrl)}" th:src="${tool.badgeImageUrl}" th:alt="${tool.name}" loading="lazy"><b th:if="${#strings.isEmpty(tool.badgeImageUrl)}" th:text="${tool.badge}">5</b></div>
             <div class="form-grid tool-fields">
-              <label>Tool name<input name="name" th:value="${tool.name}" maxlength="60" required></label>
-              <label>Sticker badge<input name="badge" th:value="${tool.badge}" maxlength="16" required></label>
+              <label>Tool name<input name="name" th:id="${'editToolName_' + tool.id}" th:value="${tool.name}" maxlength="60" required></label>
+              <label>Sticker badge text<input name="badge" th:id="${'editToolBadge_' + tool.id}" th:value="${tool.badge}" maxlength="16" required></label>
+              <label class="field-wide badge-icon-field">Icon badge (Logo)
+                <div class="badge-picker-header">
+                  <input name="badgeImageUrl" type="url" th:id="${'editToolBadgeUrl_' + tool.id}" th:value="${tool.badgeImageUrl}" maxlength="255" placeholder="Pilih dari galeri di bawah atau isi URL…">
+                  <button type="button" class="badge-picker-toggle">Pilih dari Galeri Icon ▾</button>
+                </div>
+                <div class="badge-picker">
+                  <div class="badge-picker-content is-collapsed">
+                    <div class="badge-picker-search-row"><input class="badge-picker-search" type="search" placeholder="Cari icon…" autocomplete="off"><button type="button" class="badge-picker-clear" title="Hapus icon" aria-label="Hapus icon pilihan">✕</button></div>
+                    <div class="badge-picker-grid" aria-label="Galeri icon" role="listbox"></div>
+                  </div>
+                </div>
+              </label>
+              <label class="field-wide">Link saat icon diklik (opsional)<input name="badgeLink" type="url" th:value="${tool.badgeLink}" maxlength="255" placeholder="https://spring.io"></label>
               <label class="color-field project-color-field"><input type="color" name="accentColor" th:value="${tool.accentColor}"><span><strong>Sticker color</strong><small>Toolbox accent</small></span></label>
             </div>
             <div class="form-actions"><span></span><div class="project-actions"><button class="button-primary" type="submit">Save tool <span>↗</span></button><button class="button-delete" type="submit" th:formaction="@{/admin/toolbox/{id}/delete(id=${tool.id})}" formnovalidate>Remove</button></div></div>
