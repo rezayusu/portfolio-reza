@@ -47,8 +47,12 @@ class ImageStorageServiceTest {
     @Test
     void rejectsImagesLargerThanFiveMegabytes() {
         ImageStorageService service = new ImageStorageService(temporaryDirectory.toString());
+        // For a valid magic bytes check so it triggers size check first
+        byte[] pngHeader = new byte[] { (byte)0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a };
+        byte[] largeBytes = new byte[50 * 1024 * 1024 + 1];
+        System.arraycopy(pngHeader, 0, largeBytes, 0, pngHeader.length);
         MockMultipartFile oversized = new MockMultipartFile(
-            "photo", "large.png", "image/png", new byte[5 * 1024 * 1024 + 1]);
+            "photo", "large.png", "image/png", largeBytes);
 
         assertThatThrownBy(() -> service.store(oversized))
             .isInstanceOf(ResponseStatusException.class)

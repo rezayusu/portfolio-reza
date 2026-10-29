@@ -71,6 +71,9 @@ function observeMotionElements(root = document) {
 }
 observeMotionElements();
 
+function isVideoUrl(url = "") {
+  return /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
+}
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, char => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
@@ -305,32 +308,52 @@ async function loadProjects() {
         if (!project) return;
         const mainImage = safeUrl(project.imageUrl || "");
         const rawGallery = (project.galleryUrls || "").split(/[,;\n]+/).map(s => safeUrl(s.trim())).filter(Boolean);
-        const images = [mainImage, ...rawGallery].filter((img, idx, arr) => img && arr.indexOf(img) === idx);
-        const link = safeUrl(project.projectUrl || "");
+        const mediaItems = [mainImage, ...rawGallery].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
+        const link = project.projectUrl && project.projectUrl.trim() !== "" ? safeUrl(project.projectUrl) : "";
+
+        const renderActiveMedia = (url) => {
+          if (!url) return '';
+          if (isVideoUrl(url)) {
+            return `<video id="dialogActiveShot" class="dialog-image" src="${escapeHtml(url)}" controls autoplay muted loop playsinline></video>`;
+          }
+          return `<img id="dialogActiveShot" class="dialog-image" src="${escapeHtml(url)}" alt="${escapeHtml(project.title)} preview">`;
+        };
 
         dialogContent.innerHTML = `
           <span class="project-category">${escapeHtml(project.category)}</span>
           <h2 class="dialog-title">${escapeHtml(project.title)}</h2>
           <div class="dialog-gallery-container">
             <div class="dialog-active-shot-wrap">
-              <img id="dialogActiveShot" class="dialog-image" src="${images[0] || ''}" alt="${escapeHtml(project.title)} preview" ${images.length ? '' : 'style="display:none"'}>
+              ${renderActiveMedia(mediaItems[0])}
             </div>
-            ${images.length > 1 ? `
-              <div class="dialog-thumbs" aria-label="Screenshot gallery">
-                ${images.map((img, i) => `<button type="button" class="dialog-thumb-btn ${i === 0 ? 'is-active' : ''}" data-img-src="${escapeHtml(img)}"><img src="${escapeHtml(img)}" alt="Screenshot ${i+1}" loading="lazy"></button>`).join("")}
+            ${mediaItems.length > 1 ? `
+              <div class="dialog-thumbs" aria-label="Media gallery">
+                ${mediaItems.map((m, i) => `
+                  <button type="button" class="dialog-thumb-btn ${i === 0 ? 'is-active' : ''}" data-media-src="${escapeHtml(m)}" data-is-video="${isVideoUrl(m)}">
+                    ${isVideoUrl(m) ? '<div class="dialog-thumb-video-badge">▶ Video</div>' : `<img src="${escapeHtml(m)}" alt="Media ${i+1}" loading="lazy">`}
+                  </button>
+                `).join("")}
               </div>
             ` : ''}
           </div>
           <p class="dialog-description">${escapeHtml(project.description)}</p>
           <p class="tech-tags">${(project.techStack || "").split(",").map(t => `<span>${escapeHtml(t.trim())}</span>`).join("")}</p>
-          ${link ? `<a class="dialog-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Visit project ↗</a>` : '<p class="dialog-description">Project link coming soon.</p>'}`;
+          ${link ? `<a class="dialog-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Kunjungi project ↗</a>` : ""}`;
 
-        const activeShot = dialogContent.querySelector("#dialogActiveShot");
+        const activeWrap = dialogContent.querySelector(".dialog-active-shot-wrap");
         dialogContent.querySelectorAll(".dialog-thumb-btn").forEach(btn => {
           btn.addEventListener("click", () => {
             dialogContent.querySelectorAll(".dialog-thumb-btn").forEach(b => b.classList.remove("is-active"));
             btn.classList.add("is-active");
-            if (activeShot) activeShot.src = btn.dataset.imgSrc;
+            const src = btn.dataset.mediaSrc;
+            const isVid = btn.dataset.isVideo === "true";
+            if (activeWrap) {
+              if (isVid) {
+                activeWrap.innerHTML = `<video id="dialogActiveShot" class="dialog-image" src="${escapeHtml(src)}" controls autoplay muted loop playsinline></video>`;
+              } else {
+                activeWrap.innerHTML = `<img id="dialogActiveShot" class="dialog-image" src="${escapeHtml(src)}" alt="${escapeHtml(project.title)} preview">`;
+              }
+            }
           });
         });
 

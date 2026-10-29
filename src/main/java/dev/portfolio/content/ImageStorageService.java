@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ImageStorageService {
-    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+    private static final long MAX_IMAGE_SIZE = 50 * 1024 * 1024;
 
     private final Path uploadDirectory;
 
@@ -26,7 +26,7 @@ public class ImageStorageService {
             return null;
         }
         if (image.getSize() > MAX_IMAGE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Gambar maksimal 5 MB.");
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "File maksimal 50 MB.");
         }
 
         try {
@@ -34,7 +34,7 @@ public class ImageStorageService {
             String extension = detectImageExtension(content);
             if (extension == null) {
                 throw new ResponseStatusException(
-                    HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Gunakan gambar JPEG, PNG, GIF, atau WebP.");
+                    HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Gunakan gambar (PNG, JPEG, GIF, WebP) atau video (MP4, WEBM, MOV).");
             }
             Files.createDirectories(uploadDirectory);
             String filename = UUID.randomUUID() + extension;
@@ -72,6 +72,23 @@ public class ImageStorageService {
                 && bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F'
                 && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P') {
             return ".webp";
+        }
+        // MP4 check (ftyp box starts at offset 4 with 'ftyp')
+        if (bytes.length >= 12
+                && bytes[4] == 'f' && bytes[5] == 't' && bytes[6] == 'y' && bytes[7] == 'p') {
+            return ".mp4";
+        }
+        // WebM / Matroska check (EBML header: 0x1A 0x45 0xDF 0xA3)
+        if (bytes.length >= 4
+                && (bytes[0] & 0xff) == 0x1a && (bytes[1] & 0xff) == 0x45
+                && (bytes[2] & 0xff) == 0xdf && (bytes[3] & 0xff) == 0xa3) {
+            return ".webm";
+        }
+        // MOV / QuickTime check (ftyp qt  or moov/free/mdat boxes)
+        if (bytes.length >= 12
+                && bytes[4] == 'f' && bytes[5] == 't' && bytes[6] == 'y' && bytes[7] == 'p'
+                && bytes[8] == 'q' && bytes[9] == 't') {
+            return ".mov";
         }
         return null;
     }
