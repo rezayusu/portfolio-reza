@@ -178,7 +178,7 @@ async function loadToolbox() {
     if (!response.ok) throw new Error("Could not load toolbox");
     const tools = await response.json();
     if (!tools.length) {
-      toolboxGrid.innerHTML = '<p class="loading-note">No tools have been added yet.</p>';
+      toolboxGrid.innerHTML = '<p class="loading-note">Belum ada tools yang ditambahkan nih.</p>';
       return;
     }
     toolboxGrid.innerHTML = tools.map(tool => {
@@ -208,7 +208,7 @@ async function loadEducation() {
     if (!response.ok) throw new Error("Could not load education history");
     educationCache = await response.json();
     if (!educationCache.length) {
-      timeline.innerHTML = '<p class="loading-note">Education history will be added soon.</p>';
+      timeline.innerHTML = '<p class="loading-note">Riwayat pendidikan akan segera ditambahkan.</p>';
       return;
     }
     timeline.innerHTML = educationCache.map((entry, index) => {
@@ -230,7 +230,7 @@ async function loadEducation() {
           ${image ? `<img class="dialog-image" src="${escapeHtml(image)}" alt="${escapeHtml(`Dokumentasi ${entry.schoolName}`)}">` : ""}
           ${entry.program ? `<p class="education-dialog-program">${escapeHtml(entry.program)}</p>` : ""}
           ${entry.description ? `<p class="dialog-description">${escapeHtml(entry.description)}</p>` : ""}
-          ${website ? `<a class="dialog-link" href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">Visit website ↗</a>` : ""}`;
+          ${website ? `<a class="dialog-link" href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">Kunjungi website ↗</a>` : ""}`;
         dialog.showModal();
       });
     });
@@ -247,7 +247,7 @@ async function loadCertificates() {
     if (!response.ok) throw new Error("Could not load certificates");
     const certificates = await response.json();
     if (!certificates.length) {
-      certificateGrid.innerHTML = '<p class="loading-note">Certificates will be added soon.</p>';
+      certificateGrid.innerHTML = '<p class="loading-note">Sertifikat akan segera ditambahkan.</p>';
       return;
     }
     certificateGrid.innerHTML = certificates.map((certificate, index) => {
@@ -274,7 +274,7 @@ async function loadCertificates() {
           ${image ? `<img class="certificate-dialog-image" src="${escapeHtml(image)}" alt="${escapeHtml(certificate.title)} certificate">` : ""}
           <p class="certificate-dialog-issuer">${escapeHtml(certificate.issuer)}</p>
           ${certificate.description ? `<p class="dialog-description">${escapeHtml(certificate.description)}</p>` : ""}
-          ${credential ? `<a class="dialog-link" href="${escapeHtml(credential)}" target="_blank" rel="noopener noreferrer">View credential ↗</a>` : ""}`;
+          ${credential ? `<a class="dialog-link" href="${escapeHtml(credential)}" target="_blank" rel="noopener noreferrer">Lihat sertifikat ↗</a>` : ""}`;
         dialog.showModal();
       };
       card.addEventListener("click", showCertificateDetails);
@@ -297,7 +297,7 @@ async function loadProjects() {
     if (!response.ok) throw new Error("Could not load projects");
     projectsCache = await response.json();
     if (!projectsCache.length) {
-      projectGrid.innerHTML = '<p class="loading-note">No projects yet — add your first project soon!</p>';
+      projectGrid.innerHTML = '<p class="loading-note">Belum ada project nih — yuk tambahin project pertama!</p>';
       return;
     }
     projectGrid.innerHTML = projectsCache.map(renderProject).join("");
@@ -361,7 +361,7 @@ async function loadProjects() {
       });
     });
   } catch (error) {
-    projectGrid.innerHTML = '<p class="loading-note">Could not load projects. Make sure the Spring Boot app and PostgreSQL are running.</p>';
+    projectGrid.innerHTML = '<p class="loading-note">Gagal memuat project. Pastikan Spring Boot dan PostgreSQL jalan ya, Bang.</p>';
   }
 }
 $("#closeDialog").addEventListener("click", () => dialog.close());
@@ -375,7 +375,7 @@ contactForm?.addEventListener("submit", async event => {
   const form = event.currentTarget;
   const status = $("#formStatus");
   const submit = form.querySelector("button[type=submit]");
-  status.textContent = "Sending your note...";
+  status.textContent = "Lagi ngirim pesan...";
   submit.disabled = true;
   const payload = {
     name: $("#name").value.trim(),
