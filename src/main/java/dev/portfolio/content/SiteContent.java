@@ -60,6 +60,10 @@ public class SiteContent {
 
     @Size(max = 500)
     @Column(length = 500)
+    private String aboutHoverAudioUrl = "";
+
+    @Size(max = 500)
+    @Column(length = 500)
     private String logoUrl = "";
 
     @Size(max = 500)
@@ -133,6 +137,7 @@ public class SiteContent {
     public String getAboutExtraDescription() { return aboutExtraDescription; }
     public String getAboutPhotoUrl() { return aboutPhotoUrl; }
     public String getAboutPhotoSecondUrl() { return aboutPhotoSecondUrl; }
+    public String getAboutHoverAudioUrl() { return aboutHoverAudioUrl; }
     public String getLogoUrl() { return logoUrl; }
     public String getWhatsappUrl() { return whatsappUrl; }
     public String getInstagramUrl() { return instagramUrl; }
@@ -167,6 +172,7 @@ public class SiteContent {
     public void setAboutExtraDescription(String aboutExtraDescription) { this.aboutExtraDescription = aboutExtraDescription; }
     public void setAboutPhotoUrl(String aboutPhotoUrl) { this.aboutPhotoUrl = aboutPhotoUrl; }
     public void setAboutPhotoSecondUrl(String aboutPhotoSecondUrl) { this.aboutPhotoSecondUrl = aboutPhotoSecondUrl; }
+    public void setAboutHoverAudioUrl(String aboutHoverAudioUrl) { this.aboutHoverAudioUrl = aboutHoverAudioUrl; }
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
     public void setWhatsappUrl(String whatsappUrl) { this.whatsappUrl = whatsappUrl; }
     public void setInstagramUrl(String instagramUrl) { this.instagramUrl = instagramUrl; }

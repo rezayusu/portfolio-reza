@@ -62,7 +62,8 @@ public class AdminController {
         binder.setAllowedFields(
             "displayName", "heroLine", "heroTagline", "heroDescription",
             "aboutHeadline", "aboutDescription", "aboutExtraDescription",
-            "aboutPhotoUrl", "aboutPhotoSecondUrl", "logoUrl", "whatsappUrl", "instagramUrl", "tiktokUrl");
+            "aboutPhotoUrl", "aboutPhotoSecondUrl", "aboutHoverAudioUrl",
+            "logoUrl", "whatsappUrl", "instagramUrl", "tiktokUrl");
         binder.registerCustomEditor(String.class, new StringTrimmerEditor(true));
     }
 
@@ -204,9 +205,11 @@ public class AdminController {
             BindingResult result,
             @RequestParam(defaultValue = "false") boolean clearPhoto,
             @RequestParam(defaultValue = "false") boolean clearSecondPhoto,
+            @RequestParam(defaultValue = "false") boolean clearHoverAudio,
             @RequestParam(defaultValue = "false") boolean clearLogo,
             @RequestParam(name = "photo", required = false) MultipartFile photo,
             @RequestParam(name = "secondPhoto", required = false) MultipartFile secondPhoto,
+            @RequestParam(name = "hoverAudio", required = false) MultipartFile hoverAudio,
             @RequestParam(name = "logoPhoto", required = false) MultipartFile logoPhoto,
             Model model,
             CsrfToken csrfToken,
@@ -225,6 +228,11 @@ public class AdminController {
             content.setAboutPhotoSecondUrl(imageStorage.store(secondPhoto));
         } else if (clearSecondPhoto) {
             content.setAboutPhotoSecondUrl("");
+        }
+        if (hoverAudio != null && !hoverAudio.isEmpty()) {
+            content.setAboutHoverAudioUrl(imageStorage.storeAudio(hoverAudio));
+        } else if (clearHoverAudio) {
+            content.setAboutHoverAudioUrl("");
         }
         if (logoPhoto != null && !logoPhoto.isEmpty()) {
             content.setLogoUrl(imageStorage.store(logoPhoto));

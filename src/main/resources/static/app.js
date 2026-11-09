@@ -4,6 +4,44 @@ const dialog = $("#projectDialog");
 const dialogContent = $("#dialogContent");
 let csrfToken = document.querySelector('meta[name="_csrf"]')?.content || "";
 let csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || "";
+const aboutPhotoAudio = $("#aboutHoverAudio");
+const aboutPhotoPlaceholder = $("#aboutPhoto").closest(".photo-placeholder");
+const photoAudioHint = $("#photoAudioHint");
+
+function playAboutPhotoAudio() {
+  if (!aboutPhotoAudio.src) return;
+  const playback = aboutPhotoAudio.play();
+  if (playback) {
+    playback.then(() => {
+      photoAudioHint.textContent = "Hover / klik untuk dengar ♫";
+    }).catch(error => {
+      if (error.name === "NotAllowedError") {
+        photoAudioHint.textContent = "Klik foto untuk memutar lagu ♫";
+      } else {
+        console.error("Could not play the About photo audio.", error);
+        photoAudioHint.textContent = "Lagu tidak dapat diputar.";
+      }
+    });
+  }
+}
+
+function stopAboutPhotoAudio() {
+  if (!aboutPhotoAudio.src) return;
+  aboutPhotoAudio.pause();
+  aboutPhotoAudio.currentTime = 0;
+}
+
+aboutPhotoPlaceholder.addEventListener("pointerenter", playAboutPhotoAudio);
+aboutPhotoPlaceholder.addEventListener("pointerleave", stopAboutPhotoAudio);
+aboutPhotoPlaceholder.addEventListener("click", playAboutPhotoAudio);
+aboutPhotoPlaceholder.addEventListener("focus", playAboutPhotoAudio);
+aboutPhotoPlaceholder.addEventListener("blur", stopAboutPhotoAudio);
+aboutPhotoPlaceholder.addEventListener("keydown", event => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    playAboutPhotoAudio();
+  }
+});
 
 async function refreshCsrfToken() {
   const response = await fetch("/api/csrf", { headers: { "Accept": "application/json" } });
@@ -146,7 +184,21 @@ async function loadSiteContent() {
     const secondPhotoUrl = safeUrl(content.aboutPhotoSecondUrl || "");
     const firstPhoto = $("#aboutPhoto");
     const secondPhoto = $("#aboutPhotoSecond");
+    const hoverAudioUrl = safeUrl(content.aboutHoverAudioUrl || "");
     const photoPlaceholder = firstPhoto.closest(".photo-placeholder");
+    if (hoverAudioUrl) {
+      aboutPhotoAudio.src = hoverAudioUrl;
+      photoAudioHint.hidden = false;
+      photoPlaceholder.tabIndex = 0;
+      photoPlaceholder.setAttribute("role", "button");
+      photoPlaceholder.setAttribute("aria-label", "Foto profil. Arahkan kursor atau fokus untuk memutar lagu.");
+    } else {
+      aboutPhotoAudio.removeAttribute("src");
+      photoAudioHint.hidden = true;
+      photoPlaceholder.removeAttribute("tabindex");
+      photoPlaceholder.removeAttribute("role");
+      photoPlaceholder.removeAttribute("aria-label");
+    }
     const visiblePhotoUrl = photoUrl || secondPhotoUrl;
     if (visiblePhotoUrl) {
       firstPhoto.src = visiblePhotoUrl;

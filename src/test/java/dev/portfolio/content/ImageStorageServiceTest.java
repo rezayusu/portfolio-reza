@@ -59,4 +59,29 @@ class ImageStorageServiceTest {
             .extracting("statusCode")
             .isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
     }
+
+    @Test
+    void storesMp3WithGeneratedNameInUploadDirectory() throws Exception {
+        byte[] mp3Bytes = new byte[] { 'I', 'D', '3', 4, 0, 0 };
+        ImageStorageService service = new ImageStorageService(temporaryDirectory.toString());
+
+        String audioUrl = service.storeAudio(new MockMultipartFile(
+            "hoverAudio", "song.mp3", "audio/mpeg", mp3Bytes));
+
+        assertThat(audioUrl).matches("/uploads/[0-9a-f-]{36}\\.mp3");
+        assertThat(Files.readAllBytes(temporaryDirectory.resolve(Path.of(audioUrl).getFileName())))
+            .containsExactly(mp3Bytes);
+    }
+
+    @Test
+    void rejectsUnsupportedAudioContentEvenWhenFilenameLooksLikeAudio() {
+        ImageStorageService service = new ImageStorageService(temporaryDirectory.toString());
+        MockMultipartFile invalidAudio = new MockMultipartFile(
+            "hoverAudio", "song.mp3", "audio/mpeg", "not audio".getBytes());
+
+        assertThatThrownBy(() -> service.storeAudio(invalidAudio))
+            .isInstanceOf(ResponseStatusException.class)
+            .extracting("statusCode")
+            .isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
 }

@@ -1,6 +1,7 @@
 package dev.portfolio.content;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +22,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,6 +62,7 @@ class AdminContentAppearanceTest {
         input.setPrimaryColor("#ff8a76");
         input.setAccentColor("#a9c8a5");
         input.setBackgroundColor("#f6f0e5");
+        input.setAboutHoverAudioUrl("/uploads/profile-song.mp3");
 
         controller.updateContent(
             input,
@@ -67,8 +70,10 @@ class AdminContentAppearanceTest {
             false,
             false,
             false,
+            false,
             new MockMultipartFile("photo", new byte[0]),
             new MockMultipartFile("secondPhoto", new byte[0]),
+            new MockMultipartFile("hoverAudio", new byte[0]),
             new MockMultipartFile("logoPhoto", new byte[0]),
             mock(Model.class),
             mock(CsrfToken.class),
@@ -80,8 +85,37 @@ class AdminContentAppearanceTest {
         assertThat(savedContent.getValue().getPrimaryColor()).isEqualTo("#123456");
         assertThat(savedContent.getValue().getAccentColor()).isEqualTo("#abcdef");
         assertThat(savedContent.getValue().getBackgroundColor()).isEqualTo("#fedcba");
+        assertThat(savedContent.getValue().getAboutHoverAudioUrl()).isEqualTo("/uploads/profile-song.mp3");
         assertThat(savedContent.getValue().getAdminLightText()).isEqualTo("#111111");
         assertThat(savedContent.getValue().getAdminDarkPanel()).isEqualTo("#222222");
+    }
+
+    @Test
+    void savesUploadedHoverAudio() {
+        when(contentService.getContent()).thenReturn(new SiteContent());
+        when(imageStorage.storeAudio(any(MultipartFile.class))).thenReturn("/uploads/new-song.mp3");
+        SiteContent input = new SiteContent();
+        MockMultipartFile hoverAudio = new MockMultipartFile(
+            "hoverAudio", "song.mp3", "audio/mpeg", new byte[] { 'I', 'D', '3', 4 });
+
+        controller.updateContent(
+            input,
+            new BeanPropertyBindingResult(input, "content"),
+            false,
+            false,
+            false,
+            false,
+            new MockMultipartFile("photo", new byte[0]),
+            new MockMultipartFile("secondPhoto", new byte[0]),
+            hoverAudio,
+            new MockMultipartFile("logoPhoto", new byte[0]),
+            mock(Model.class),
+            mock(CsrfToken.class),
+            redirectAttributes);
+
+        ArgumentCaptor<SiteContent> savedContent = ArgumentCaptor.forClass(SiteContent.class);
+        verify(contentService).update(savedContent.capture());
+        assertThat(savedContent.getValue().getAboutHoverAudioUrl()).isEqualTo("/uploads/new-song.mp3");
     }
 
     @Test

@@ -1,151 +1,290 @@
 # Scrapbook Developer Portfolio
 
-Portfolio aesthetic scrapbook yang menggunakan HTML, Tailwind CSS (CDN), CSS custom, JavaScript, Spring Boot, Spring Security, Spring Data JPA, dan PostgreSQL. Aplikasi web statis ikut dipaketkan di dalam executable JAR Spring Boot.
+Aplikasi portofolio pribadi bergaya scrapbook. Frontend publik menggunakan HTML, CSS, dan JavaScript; backend menggunakan Java 25 dan Spring Boot; data disimpan di PostgreSQL. Dashboard admin dirender dengan Thymeleaf dan dilindungi Spring Security.
+
+## Daftar isi
+
+- [Fitur](#fitur)
+- [Teknologi](#teknologi)
+- [Gambaran arsitektur](#gambaran-arsitektur)
+- [Alur frontend ke backend](#alur-frontend-ke-backend)
+- [Alur backend ke database](#alur-backend-ke-database)
+- [MVC di proyek ini](#mvc-di-proyek-ini)
+- [Struktur proyek](#struktur-proyek)
+- [Endpoint](#endpoint)
+- [Menjalankan aplikasi](#menjalankan-aplikasi)
+- [Upload file](#upload-file)
+- [Keamanan dan deployment](#keamanan-dan-deployment)
+- [Tes](#tes)
 
 ## Fitur
-- Responsive scrapbook-style portfolio.
-- Project list diambil dari PostgreSQL melalui `GET /api/projects`.
-- Project detail modal, theme toggle, mobile nav, scroll reveal, contact form.
-- Pesan kontak disimpan ke tabel `contact_messages`.
-- Masukan baru juga mengirim notifikasi email melalui SMTP ke alamat yang dikonfigurasi.
-- Endpoint admin untuk CRUD project dan membaca pesan, dilindungi Spring Security.
-- Dashboard Thymeleaf di `/admin` untuk mengubah pengenalan, bagian about, foto profil, warna portfolio, dan project langsung di PostgreSQL.
-- Timeline pendidikan dari SD sampai SMK dapat ditambah, diedit, dan dihapus dari dashboard; daftar ditampilkan kronologis di portfolio publik.
-- Sertifikat dapat ditambah, diedit, dan dihapus dari dashboard; data disimpan di PostgreSQL dan ditampilkan di portfolio publik.
-- Project dapat diedit/dihapus dan item toolbox dapat ditambah, diedit, dihapus melalui dashboard; daftar toolbox publik dibaca dari PostgreSQL.
-- Upload foto profil, logo navigasi portfolio/dashboard, dan gambar project (JPEG, PNG, GIF, WebP; maksimal 5 MB), disimpan di folder `uploads/`.
-- Validasi input di backend, BCrypt untuk password admin, CSRF tetap aktif untuk form kontak.
-- Tidak menyimpan credential database/admin di source code.
 
-## Prasyarat
-- Java 25+ (latest LTS)
-- Maven 3.9+
-- PostgreSQL 14+ (atau versi yang didukung oleh lingkunganmu)
+- Halaman publik responsif dengan bagian perkenalan, About, project, pendidikan, sertifikat, toolbox, dan kontak.
+- Konten halaman dan data portofolio publik diambil dari API backend.
+- Dashboard admin untuk mengubah konten, tampilan, project, pendidikan, sertifikat, toolbox, dan melihat pesan.
+- Upload gambar dan lagu untuk foto About. Lagu bisa diputar saat foto di-hover; tersedia juga URL media.
+- Form kontak menyimpan pesan dan mencoba mengirimkan notifikasi email melalui SMTP.
+- Tema terang/gelap, navigasi mobile, animasi reveal, dan detail project dalam modal.
 
-## 1. Siapkan PostgreSQL
+## Teknologi
 
-Login sebagai user administrator PostgreSQL, lalu jalankan:
+| Bagian | Teknologi |
+|---|---|
+| Frontend publik | HTML, CSS, JavaScript, Tailwind CSS melalui CDN |
+| View dashboard admin | Thymeleaf |
+| Backend | Java 25, Spring Boot 3.5 |
+| Web/API | Spring Web MVC |
+| Database access | Spring Data JPA dan Hibernate |
+| Database | PostgreSQL |
+| Validasi | Jakarta Bean Validation |
+| Autentikasi dan perlindungan | Spring Security, BCrypt, CSRF |
+| Build dan tes | Maven, JUnit, Spring Boot Test |
+
+## Gambaran arsitektur
+
+Aplikasi ini adalah **monolith Spring Boot**: backend Java dan file frontend publik berada dalam satu proyek dan dapat dikemas bersama sebagai satu executable JAR.
+
+```text
+Browser
+  ├─ Halaman publik: HTML + CSS + JavaScript
+  │    └─ fetch()/JSON ───────────────┐
+  └─ Dashboard admin: formulir HTML  │
+       + Thymeleaf                    │
+       └─ form submit / multipart ────┤
+                                      ▼
+                           Spring Boot / Spring MVC
+                           ├─ Controller (routing/API)
+                           ├─ Service (aturan aplikasi)
+                           ├─ Repository (akses data)
+                           └─ ImageStorageService (file)
+                               ├─ PostgreSQL
+                               └─ folder uploads/
+```
+
+Kedua tampilan memakai backend yang sama, tetapi cara komunikasinya berbeda:
+
+- Halaman publik adalah frontend statis di `src/main/resources/static`. JavaScript meminta data lewat endpoint REST dan menerima JSON.
+- Dashboard admin adalah halaman server-rendered di `src/main/resources/templates`. Controller mengisi model Thymeleaf, lalu browser mengirim formulir kembali ke backend.
+
+## Alur frontend ke backend
+
+### Halaman publik
+
+Saat browser membuka `/`, Spring Boot menyajikan `static/index.html`. File tersebut memuat `styles.css` untuk tampilan dan `app.js` untuk interaksi. Setelah halaman dimuat, JavaScript meminta data dari API:
+
+| Data yang ditampilkan | Endpoint |
+|---|---|
+| Konten nama, hero, About, warna, foto, dan URL media | `GET /api/site-content` |
+| Project | `GET /api/projects` |
+| Toolbox | `GET /api/toolbox` |
+| Pendidikan | `GET /api/education` |
+| Sertifikat | `GET /api/certificates` |
+
+Spring mengubah objek Java yang dikembalikan controller menjadi JSON. JavaScript menggunakan `fetch()`, kemudian mengisi elemen halaman atau membuat kartu-kartu konten.
+
+Form kontak mengirim JSON ke `POST /api/contact`. Sebelum mengirim, frontend mengambil token CSRF dari `GET /api/csrf`, lalu menyertakan token tersebut pada request. Backend memvalidasi isi pesan dan menyimpannya sebelum mencoba mengirim notifikasi email.
+
+### Dashboard admin
+
+`AdminController` menangani halaman `/admin` dan menu-menunya. Controller menyiapkan data yang diperlukan lalu mengembalikan view `admin`; Thymeleaf menggabungkan view itu dengan data sebelum HTML dikirim ke browser. Saat formulir admin dikirim, browser mengirim request POST yang diproses controller, data divalidasi/disimpan, lalu browser diarahkan kembali ke halaman admin.
+
+Form upload menggunakan `multipart/form-data`. Berbeda dengan foto atau lagu yang diunggah, URL media yang dimasukkan admin hanya disimpan sebagai alamat rujukan.
+
+## Alur backend ke database
+
+1. **Controller** menerima HTTP request, membaca parameter/path/JSON/form, dan memilih operasi yang sesuai.
+2. **Service**, jika diperlukan, menjalankan aturan aplikasi. Contohnya `SiteContentService` memastikan konten halaman tunggal dan menyalin perubahan yang boleh disimpan.
+3. **Repository** berbasis `JpaRepository` menyediakan operasi simpan, baca, ubah, dan hapus. Spring Data JPA/Hibernate menerjemahkan pemanggilan repository menjadi SQL.
+4. **PostgreSQL** menyimpan record terstruktur. Hasil pembacaan dikembalikan melalui controller sebagai JSON untuk API atau sebagai data model untuk Thymeleaf.
+
+Tabel utama yang dipetakan oleh entity:
+
+| Entity | Tabel |
+|---|---|
+| `SiteContent` | `portfolio_content` |
+| `Project` | `portfolio_projects` |
+| `ToolboxItem` | `portfolio_toolbox` |
+| `EducationEntry` | `portfolio_education` |
+| `Certificate` | `portfolio_certificates` |
+| `ContactMessage` | `contact_messages` |
+
+Hibernate dikonfigurasi dengan `spring.jpa.hibernate.ddl-auto=update`; saat aplikasi berjalan, Hibernate menyesuaikan skema berdasarkan entity. `SeedData` menambahkan contoh project dan toolbox hanya ketika tabel terkait masih kosong. Konten halaman dibuat saat pertama kali diminta jika belum tersedia.
+
+File gambar/audio **tidak disimpan sebagai byte di PostgreSQL**. `ImageStorageService` memeriksa tipe file, memberi nama acak, lalu menyimpan file ke folder upload; yang disimpan di entity/database adalah URL file tersebut. `UploadResourceConfig` memetakan URL `/uploads/**` ke folder upload agar file dapat dilayani browser.
+
+## MVC di proyek ini
+
+MVC adalah pola pemisahan **Model**, **View**, dan **Controller**. Dalam Spring MVC proyek ini, pola tersebut terutama terlihat pada halaman dashboard admin; endpoint API memakai controller Spring MVC yang sama tetapi mengembalikan data JSON, bukan view HTML.
+
+### Model
+
+Model menggambarkan data dan aturan validasinya. Entity JPA menjadi representasi record database, misalnya `Project`, `SiteContent`, dan `ContactMessage`. Repository menyediakan akses penyimpanan untuk entity tersebut. Pada dashboard, data yang dibutuhkan view juga dikirim lewat `org.springframework.ui.Model`.
+
+### View
+
+- **Publik:** `src/main/resources/static/index.html`, `styles.css`, dan `app.js`. Ini adalah halaman statis; konten dinamisnya diminta melalui API.
+- **Admin:** `src/main/resources/templates/admin.html` dan `login.html`. Thymeleaf merender nilai yang disiapkan controller ke dalam HTML.
+
+### Controller
+
+- `AdminController`: halaman dashboard dan aksi formulir admin.
+- `SiteContentController`, `ProjectController`, `ToolboxController`, `EducationController`, `CertificateController`: API konten dan data portofolio.
+- `ContactController`: menerima pesan kontak dan menyediakan operasi pesan admin.
+- `LoginPageController`: halaman login.
+
+Dengan pemisahan ini, view tidak menjalankan query SQL. Controller menghubungkan request dengan service/repository, sedangkan data dan penyimpanannya berada di model/entity dan repository.
+
+## Struktur proyek
+
+```text
+src/
+├─ main/
+│  ├─ java/dev/portfolio/
+│  │  ├─ admin/          # Controller dashboard admin
+│  │  ├─ certificate/    # Entity, repository, API sertifikat
+│  │  ├─ config/         # Security, upload, seed data, konfigurasi
+│  │  ├─ contact/        # Pesan kontak dan notifikasi email
+│  │  ├─ content/        # Konten halaman, service, repository, upload
+│  │  ├─ education/      # Data dan API pendidikan
+│  │  ├─ project/        # Data dan API project
+│  │  └─ toolbox/        # Data dan API toolbox
+│  └─ resources/
+│     ├─ static/         # Frontend publik dan aset statis
+│     ├─ templates/      # View Thymeleaf admin dan login
+│     └─ application.properties
+└─ test/java/            # Tes unit dan tes controller
+```
+
+## Endpoint
+
+### API publik
+
+| Method | Path | Kegunaan |
+|---|---|---|
+| `GET` | `/api/site-content` | Mengambil konten umum halaman |
+| `GET` | `/api/projects` | Mengambil daftar project |
+| `GET` | `/api/toolbox` | Mengambil daftar toolbox |
+| `GET` | `/api/education` | Mengambil pendidikan secara kronologis |
+| `GET` | `/api/certificates` | Mengambil sertifikat terbaru |
+| `GET` | `/api/csrf` | Mengambil token CSRF untuk request browser |
+| `POST` | `/api/contact` | Memvalidasi dan menyimpan pesan kontak |
+
+### API admin berbasis JSON
+
+Endpoint berikut memerlukan role admin melalui Spring Security HTTP Basic:
+
+| Method | Path | Kegunaan |
+|---|---|---|
+| `POST` | `/api/admin/projects` | Membuat project |
+| `PUT` | `/api/admin/projects/{id}` | Mengubah project |
+| `DELETE` | `/api/admin/projects/{id}` | Menghapus project |
+| `POST` | `/api/admin/certificates` | Membuat sertifikat |
+| `PUT` | `/api/admin/certificates/{id}` | Mengubah sertifikat |
+| `DELETE` | `/api/admin/certificates/{id}` | Menghapus sertifikat |
+| `GET` | `/api/admin/messages` | Mengambil pesan kontak |
+
+### Halaman admin
+
+- `/admin` — dashboard.
+- `/admin/content` — teks, foto About, lagu hover, logo, dan tautan sosial.
+- `/admin/projects`, `/admin/education`, `/admin/certificates`, `/admin/toolbox` — pengelolaan konten terkait.
+- `/admin/appearance` — warna situs dan tema dashboard.
+- `/admin/messages` — melihat dan mengelola pesan.
+- `/admin/preview` — preview dashboard dalam mode baca.
+
+Halaman admin menggunakan login form. Operasi admin melalui browser memakai session dan perlindungan CSRF Spring Security.
+
+## Menjalankan aplikasi
+
+### Prasyarat
+
+- JDK 25 atau lebih baru.
+- Maven 3.9 atau lebih baru.
+- PostgreSQL yang dapat diakses aplikasi.
+
+### 1. Buat role dan database PostgreSQL
+
+Jalankan sebagai administrator PostgreSQL dan ganti placeholder password dengan password kuat:
 
 ```sql
-CREATE USER portfolio_app WITH PASSWORD 'GANTI_DENGAN_PASSWORD_RANDOM_PANJANG';
+CREATE USER portfolio_app WITH PASSWORD 'GANTI_DENGAN_PASSWORD_KUAT';
 CREATE DATABASE scrapbook_portfolio OWNER portfolio_app;
 ```
 
-Gunakan password yang kuat. Jangan gunakan akun superuser `postgres` untuk aplikasi sehari-hari.
+### 2. Atur konfigurasi lokal
 
-## 2. Configure local secrets
+Aplikasi membaca konfigurasi dari environment variable. Untuk pengembangan lokal, buat file `.env` di root proyek (jangan commit file ini):
 
-Copy `.env.example` to `.env` in the project root, then replace both placeholder passwords with your real PostgreSQL password and a strong, unique admin password. Spring Boot loads `.env` automatically for local development, including when launched from the IDE.
-
-Contoh PowerShell Windows alternatif (gunakan di terminal yang sama dengan Maven):
-
-```powershell
-$env:DB_URL="jdbc:postgresql://localhost:5432/scrapbook_portfolio"
-$env:DB_USERNAME="portfolio_app"
-$env:DB_PASSWORD="PASSWORD_DATABASE_KAMU"
-$env:ADMIN_USERNAME="portfolio-admin"
-$env:ADMIN_PASSWORD="PASSWORD_ADMIN_PANJANG_DAN_UNIK"
-$env:COOKIE_SECURE="false"
+```properties
+DB_URL=jdbc:postgresql://localhost:5432/scrapbook_portfolio
+DB_USERNAME=portfolio_app
+DB_PASSWORD=password-database-kamu
+ADMIN_USERNAME=portfolio-admin
+ADMIN_PASSWORD=password-admin-yang-kuat
+COOKIE_SECURE=false
 ```
 
-Di Linux/macOS gunakan `export NAME=value` jika tidak memakai `.env`.
+`ADMIN_PASSWORD` wajib diisi; aplikasi menolak startup bila password tidak dikonfigurasi. Untuk SMTP, isi juga `MAIL_USERNAME`, `MAIL_APP_PASSWORD`, dan bila perlu `FEEDBACK_NOTIFICATION_TO`. Tanpa SMTP, pesan tetap tersimpan, tetapi notifikasi email tidak terkirim.
 
-Jangan masukkan password asli ke Git, screenshot, atau file konfigurasi yang dibagikan. Untuk production, gunakan secret manager dan set `COOKIE_SECURE=true` jika berjalan di belakang HTTPS.
+### 3. Jalankan dalam mode development
 
-### Notifikasi email masukan
-
-Untuk Gmail, aktifkan verifikasi 2 langkah lalu buat Google App Password. Isi `MAIL_USERNAME` dengan alamat Gmail pengirim dan `MAIL_APP_PASSWORD` dengan App Password tersebut di `.env` lokal atau secret manager deployment. Jangan gunakan password akun Gmail biasa. `FEEDBACK_NOTIFICATION_TO` secara default diarahkan ke `rezayusuf651@gmail.com`; ubah hanya jika ingin menerima notifikasi di alamat lain. Jika SMTP belum dikonfigurasi atau pengiriman gagal, pesan tetap tersimpan dan form akan menampilkan status bahwa notifikasi email belum terkirim.
-
-## 3. Jalankan mode development
-
-Dari folder project:
+Dari root repository:
 
 ```bash
 mvn spring-boot:run
 ```
 
-Buka `http://localhost:8080`. Pada start pertama, Hibernate membuat tabel dan aplikasi mengisi tiga contoh project jika tabel project masih kosong.
+Buka `http://localhost:8080`. Login admin tersedia di `/login`.
 
-## 4. Build menjadi satu JAR
+### 4. Build dan jalankan JAR
 
 ```bash
 mvn clean package
-```
-
-Hasilnya:
-
-```text
-target/scrapbook-portfolio.jar
-```
-
-JAR tersebut memuat backend Java dan file HTML/CSS/JS dari `src/main/resources/static`.
-
-Jalankan dengan environment variables yang sama:
-
-```bash
 java -jar target/scrapbook-portfolio.jar
 ```
 
-Buka `http://localhost:8080`.
+JAR memuat backend dan frontend statis. Database PostgreSQL serta folder `uploads/` tetap merupakan sumber daya eksternal dan harus tersedia di lingkungan tempat aplikasi berjalan.
 
-## API
-### Dashboard admin
-- Buka `http://localhost:8080/admin` dan login dengan `ADMIN_USERNAME` serta `ADMIN_PASSWORD`.
-- Gunakan `http://localhost:8080/admin/preview` untuk melihat dashboard tanpa login dalam mode baca saja.
-- Pengaturan halaman disimpan pada tabel `portfolio_content`; project tetap disimpan pada tabel `portfolio_projects`.
-- Item toolbox disimpan di tabel `portfolio_toolbox`; daftar awal ditambahkan otomatis jika tabel masih kosong.
-- Riwayat pendidikan disimpan di tabel `portfolio_education` dan dapat dikelola melalui menu Education di dashboard.
-- Sertifikat disimpan di tabel `portfolio_certificates` dan dapat dikelola melalui menu Certificates di dashboard, termasuk penerbit, tahun, deskripsi, tautan verifikasi, dan gambar.
-- Upload gambar langsung dari dashboard atau gunakan URL gambar langsung berawalan `https://`. File upload disimpan di `uploads/`; atur `UPLOAD_DIR` ke penyimpanan persisten saat deployment.
-- Perubahan warna, teks, dan project akan tampil pada portfolio publik setelah disimpan.
+## Upload file
 
-### Public
-- `GET /api/projects` — daftar project.
-- `GET /api/education` — riwayat pendidikan terurut dari tahun mulai paling awal.
-- `GET /api/certificates` — sertifikat terbaru lebih dulu.
-- `POST /api/contact` — menyimpan pesan kontak; validasi backend dan CSRF browser berlaku.
+- Secara default file disimpan di folder `uploads/` pada working directory aplikasi.
+- Atur `UPLOAD_DIR` untuk memilih lokasi lain. Pada deployment, gunakan volume persisten dan backup untuk direktori tersebut.
+- Gambar yang diterima: PNG, JPEG, GIF, WebP, serta format video yang didukung oleh upload project.
+- Lagu foto About menerima MP3, WAV, OGG, FLAC, atau M4A, maksimal 20 MB.
+- Backend membatasi ukuran file gambar/media umum hingga 50 MB; batas request multipart Spring Boot adalah 60 MB.
+- File disajikan dari `/uploads/**`; database hanya menyimpan URL-nya.
 
-### Admin (HTTP Basic, username/password dari environment variables)
-Gunakan Postman atau klien API. Autentikasi admin memakai Spring Security HTTP Basic.
+## Keamanan dan deployment
 
-- `POST /api/admin/projects` — buat project.
-- `PUT /api/admin/projects/{id}` — ubah project.
-- `DELETE /api/admin/projects/{id}` — hapus project.
-- `POST /api/admin/certificates` — buat sertifikat.
-- `PUT /api/admin/certificates/{id}` — ubah sertifikat.
-- `DELETE /api/admin/certificates/{id}` — hapus sertifikat.
-- `GET /api/admin/messages` — baca pesan kontak.
+- Kredensial database, admin, dan SMTP harus disediakan lewat environment variable atau secret manager, bukan ditulis ke source code.
+- Password admin disimpan sebagai BCrypt hash oleh Spring Security.
+- API admin dibatasi untuk role admin. Form browser menggunakan CSRF; endpoint admin JSON memakai HTTP Basic.
+- Aktifkan HTTPS di deployment dan set `COOKIE_SECURE=true` bila berjalan di belakang HTTPS.
+- Konfigurasi `ddl-auto=update` cocok untuk pengembangan awal. Untuk production, gunakan Flyway/Liquibase dan tinjau perubahan skema secara terkontrol.
+- Gunakan database dan penyimpanan upload persisten, atur backup, batasi akses jaringan, serta jangan mengekspos HTTP Basic tanpa TLS.
 
-Contoh JSON untuk membuat project:
+## Tes
 
-```json
-{
-  "title": "My New Project",
-  "description": "A small project built with JavaScript.",
-  "category": "Web App",
-  "imageUrl": "https://example.com/preview.jpg",
-  "projectUrl": "https://example.com",
-  "techStack": "HTML, CSS, JavaScript",
-  "featured": true
-}
+Jalankan seluruh tes:
+
+```bash
+mvn test
 ```
 
-Kirim Basic Auth dan `Content-Type: application/json`. Jangan gunakan endpoint admin melalui HTTP tanpa TLS di jaringan publik. Di production, wajib HTTPS.
+Jalankan tes tertentu:
 
-## Catatan keamanan sebelum production
-1. Ganti semua credential contoh dan simpan sebagai environment variables/secret manager.
-2. Aktifkan HTTPS dan `COOKIE_SECURE=true`.
-3. Tambahkan rate limiting/CAPTCHA pada contact endpoint, logging, backup database, dan monitoring.
-4. Gunakan Flyway/Liquibase untuk migrasi skema; jangan mengandalkan `ddl-auto=update` untuk production.
-5. Tailwind CDN memudahkan prototipe, tetapi untuk deployment yang lebih ketat build Tailwind secara lokal agar tidak bergantung pada CDN dan sesuaikan Content Security Policy.
-6. Batasi akses database ke host aplikasi dan gunakan firewall serta least-privilege database role.
-7. Tambahkan pengujian, pagination, dan kebijakan retensi untuk pesan kontak sebelum menerima traffic publik.
+```bash
+mvn -Dtest=SiteContentServiceTest test
+```
 
 ## Kustomisasi
-- Nama dan teks: `src/main/resources/static/index.html`
-- Tampilan: `src/main/resources/static/styles.css`
-- Interaksi dan fetch API: `src/main/resources/static/app.js`
-- Data contoh: `src/main/java/dev/portfolio/config/SeedData.java`
-- Konfigurasi: `src/main/resources/application.properties`
 
-Ganti nama “Reza” dan isi profil dengan informasi milikmu sendiri.
+- Konten awal dan markup publik: `src/main/resources/static/index.html`
+- Styling publik: `src/main/resources/static/styles.css`
+- Interaksi serta pemanggilan API publik: `src/main/resources/static/app.js`
+- Tampilan dan formulir admin: `src/main/resources/templates/admin.html`
+- Controller dashboard: `src/main/java/dev/portfolio/admin/AdminController.java`
+- Data contoh: `src/main/java/dev/portfolio/config/SeedData.java`
+- Konfigurasi Spring: `src/main/resources/application.properties`
+
+Ganti nama dan konten profil contoh dengan informasi portofolio yang ingin ditampilkan.

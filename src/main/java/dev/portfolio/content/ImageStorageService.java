@@ -14,13 +14,14 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class ImageStorageService {
     private static final long MAX_IMAGE_SIZE = 50 * 1024 * 1024;
+    private static final long MAX_AUDIO_SIZE = 20 * 1024 * 1024;
 
     private final Path uploadDirectory;
 
     public ImageStorageService(@Value("${portfolio.upload-dir:uploads}") String uploadDirectory) {
         this.uploadDirectory = Path.of(uploadDirectory).toAbsolutePath().normalize();
     }
-
+    
     public String store(MultipartFile image) {
         if (image == null || image.isEmpty()) {
             return null;
@@ -42,6 +43,30 @@ public class ImageStorageService {
             return "/uploads/" + filename;
         } catch (IOException exception) {
             throw new UncheckedIOException("Tidak dapat menyimpan gambar yang diunggah.", exception);
+        }
+    }
+
+    public String storeAudio(MultipartFile audio) {
+        if (audio == null || audio.isEmpty()) {
+            return null;
+        }
+        if (audio.getSize() > MAX_AUDIO_SIZE) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "File audio maksimal 20 MB.");
+        }
+
+        try {
+            byte[] content = audio.getBytes();
+            String extension = detectAudioExtension(content);
+            if (extension == null) {
+                throw new ResponseStatusException(
+                    HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Gunakan file audio MP3, WAV, OGG, FLAC, atau M4A.");
+            }
+            Files.createDirectories(uploadDirectory);
+            String filename = UUID.randomUUID() + extension;
+            Files.write(uploadDirectory.resolve(filename), content);
+            return "/uploads/" + filename;
+        } catch (IOException exception) {
+            throw new UncheckedIOException("Tidak dapat menyimpan audio yang diunggah.", exception);
         }
     }
 
@@ -71,7 +96,7 @@ public class ImageStorageService {
         if (bytes.length >= 12
                 && bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F'
                 && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P') {
-            return ".webp";
+            return ".webp";        
         }
         // MP4 check (ftyp box starts at offset 4 with 'ftyp')
         if (bytes.length >= 12
@@ -89,6 +114,35 @@ public class ImageStorageService {
                 && bytes[4] == 'f' && bytes[5] == 't' && bytes[6] == 'y' && bytes[7] == 'p'
                 && bytes[8] == 'q' && bytes[9] == 't') {
             return ".mov";
+        }
+        return null;
+    }
+
+    private String detectAudioExtension(byte[] bytes) {
+        if (bytes.length >= 3 && bytes[0] == 'I' && bytes[1] == 'D' && bytes[2] == '3') {
+            return ".mp3";
+        }
+        if (bytes.length >= 2 && (bytes[0] & 0xff) == 0xff && (bytes[1] & 0xe0) == 0xe0) {
+            return ".mp3";
+        }
+        if (bytes.length >= 12
+                && bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F'
+                && bytes[8] == 'W' && bytes[9] == 'A' && bytes[10] == 'V' && bytes[11] == 'E') {
+            return ".wav";
+        }
+        if (bytes.length >= 4
+                && bytes[0] == 'O' && bytes[1] == 'g' && bytes[2] == 'g' && bytes[3] == 'S') {
+            return ".ogg";
+        }
+        if (bytes.length >= 4
+                && bytes[0] == 'f' && bytes[1] == 'L' && bytes[2] == 'a' && bytes[3] == 'C') {
+            return ".flac";
+        }
+        if (bytes.length >= 12
+                && bytes[4] == 'f' && bytes[5] == 't' && bytes[6] == 'y' && bytes[7] == 'p'
+                && ((bytes[8] == 'M' && bytes[9] == '4' && (bytes[10] == 'A' || bytes[10] == 'B'))
+                    || (bytes[8] == 'M' && bytes[9] == '4' && bytes[10] == 'P'))) {
+            return ".m4a";
         }
         return null;
     }

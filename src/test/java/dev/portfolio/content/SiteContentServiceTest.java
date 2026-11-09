@@ -31,6 +31,7 @@ class SiteContentServiceTest {
         input.setAboutExtraDescription("One more detail.");
         input.setAboutPhotoUrl("/uploads/profile.png");
         input.setAboutPhotoSecondUrl("/uploads/profile-second.png");
+        input.setAboutHoverAudioUrl("/uploads/profile-song.mp3");
         input.setLogoUrl("/uploads/logo.png");
         input.setWhatsappUrl("https://wa.me/628123456789");
         input.setInstagramUrl("https://instagram.com/rezadev");
@@ -53,6 +54,7 @@ class SiteContentServiceTest {
         assertThat(saved.getHeroTagline()).isEqualTo("thoughtful things.");
         assertThat(saved.getAboutPhotoUrl()).isEqualTo("/uploads/profile.png");
         assertThat(saved.getAboutPhotoSecondUrl()).isEqualTo("/uploads/profile-second.png");
+        assertThat(saved.getAboutHoverAudioUrl()).isEqualTo("/uploads/profile-song.mp3");
         assertThat(saved.getLogoUrl()).isEqualTo("/uploads/logo.png");
         assertThat(saved.getWhatsappUrl()).isEqualTo("https://wa.me/628123456789");
         assertThat(saved.getInstagramUrl()).isEqualTo("https://instagram.com/rezadev");

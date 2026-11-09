@@ -12,9 +12,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/styles.css?v=32">
+  <link rel="stylesheet" href="/styles.css?v=33">
   <script defer src="/color-bends.js?v=3"></script>
-  <script defer src="/app.js?v=21"></script>
+  <script defer src="/app.js?v=22"></script>
   <script defer src="/tech-text.js?v=1"></script>
 </head>
 <body>
@@ -63,7 +63,7 @@ developer.<span class="code-blue">build</span>();<span class="cursor">▍</span>
       <div class="about-grid">
         <div class="about-photo reveal">
           <div class="polaroid">
-            <div class="photo-placeholder"><img id="aboutPhoto" alt="Foto profil Abang"><img id="aboutPhotoSecond" alt="Foto profil kedua Abang"><span class="photo-sun">☼</span><span class="photo-initial" id="photoInitial">R</span><span class="photo-spark">✦</span></div>
+            <div class="photo-placeholder"><img id="aboutPhoto" alt="Foto profil Abang"><img id="aboutPhotoSecond" alt="Foto profil kedua Abang"><span class="photo-sun">☼</span><span class="photo-initial" id="photoInitial">R</span><span class="photo-spark">✦</span><span id="photoAudioHint" class="photo-audio-hint" hidden>Hover / klik untuk dengar ♫</span></div>
             <p class="handwritten">Ganteng Gasih Itu Yang Diatas ↗</p>
           </div>
           <span class="tape photo-tape"></span><span class="tiny-doodle"> itu Abang!</span>
@@ -126,5 +126,6 @@ developer.<span class="code-blue">build</span>();<span class="cursor">▍</span>
     <button id="closeDialog" class="dialog-close" aria-label="Tutup detail project Abang">×</button>
     <div id="dialogContent"></div>
   </dialog>
+  <audio id="aboutHoverAudio" preload="none"></audio>
 </body>
 </html>

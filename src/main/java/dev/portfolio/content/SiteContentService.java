@@ -30,6 +30,7 @@ public class SiteContentService {
         content.setAboutExtraDescription(input.getAboutExtraDescription());
         content.setAboutPhotoUrl(input.getAboutPhotoUrl());
         content.setAboutPhotoSecondUrl(input.getAboutPhotoSecondUrl());
+        content.setAboutHoverAudioUrl(input.getAboutHoverAudioUrl());
         content.setLogoUrl(input.getLogoUrl());
         content.setWhatsappUrl(input.getWhatsappUrl());
         content.setInstagramUrl(input.getInstagramUrl());
