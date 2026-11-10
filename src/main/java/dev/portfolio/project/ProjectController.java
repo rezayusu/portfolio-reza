@@ -33,6 +33,7 @@ public class ProjectController {
         existing.setTitle(input.getTitle());
         existing.setDescription(input.getDescription());
         existing.setCategory(input.getCategory());
+        existing.setField(input.getField());
         existing.setImageUrl(input.getImageUrl());
         existing.setProjectUrl(input.getProjectUrl());
         existing.setTechStack(input.getTechStack());

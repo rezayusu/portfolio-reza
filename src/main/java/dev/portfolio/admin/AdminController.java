@@ -114,7 +114,7 @@ public class AdminController {
 
     private void bindProjectFields(WebDataBinder binder) {
         binder.setAllowedFields(
-            "title", "description", "category", "imageUrl", "galleryUrls", "projectUrl",
+            "title", "description", "category", "field", "imageUrl", "galleryUrls", "projectUrl",
             "techStack", "featured", "accentColor");
         binder.registerCustomEditor(String.class, new StringTrimmerEditor(true));
     }
@@ -314,7 +314,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("notice", "Periksa kembali isian project; judul, deskripsi, kategori, dan warna wajib valid.");
             return "redirect:/admin/projects";
         }
-        String uploadedImage = imageStorage.store(photo);
+        String uploadedImage = imageStorage.storeImage(photo);
         if (uploadedImage != null) {
             project.setImageUrl(uploadedImage);
         }
@@ -351,10 +351,11 @@ public class AdminController {
         Project existing = projectRepository.findById(id)
             .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.NOT_FOUND));
-        String uploadedImage = imageStorage.store(photo);
+        String uploadedImage = imageStorage.storeImage(photo);
         existing.setTitle(input.getTitle());
         existing.setDescription(input.getDescription());
         existing.setCategory(input.getCategory());
+        existing.setField(input.getField());
         existing.setImageUrl(uploadedImage == null ? input.getImageUrl() : uploadedImage);
 
         List<String> storedGallery = new ArrayList<>();

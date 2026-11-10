@@ -1,0 +1,321 @@
+.admin-body {
+  --paper: #111010;
+  --paper2: #1d1a1b;
+  --ink: #f2eeee;
+  --muted: #c1b8b9;
+  --coral: #b20e22;
+  --sage: #8e0b1b;
+  --yellow: #b20e22;
+  --line: #484142;
+  --shadow: 7px 8px 0 rgb(0 0 0 / 28%);
+  --admin-teal: #b20e22;
+  --admin-teal-dark: #e13a4e;
+  --admin-sky: #111010;
+  --admin-blue-ink: #f2eeee;
+  --admin-panel: #1d1a1b;
+  --admin-light-text: #f2eeee;
+  --admin-light-sidebar: #171415;
+  --admin-light-hover: #b20e22;
+  --admin-light-panel: #1d1a1b;
+  --admin-dark-text: #f2eeee;
+  --admin-dark-sidebar: #171415;
+  --admin-dark-hover: #b20e22;
+  --admin-dark-panel: #1d1a1b;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 92% 6%, rgb(91 12 26 / 40%), transparent 34%),
+    #111010;
+  color: #f2eeee;
+  color-scheme: dark;
+}
+
+.admin-body::before {
+  display: none;
+}
+
+.admin-body .paper-grain {
+  opacity: .06;
+}
+
+.admin-body .site-header {
+  max-width: none;
+  border-bottom-color: transparent;
+  background: transparent;
+  color: #f2eeee;
+  backdrop-filter: none;
+}
+
+.admin-body .admin-header .brand-mark {
+  border-color: #f2eeee;
+  background: #b20e22;
+}
+
+.admin-body .admin-header .text-link,
+.admin-body .admin-header .admin-label {
+  border-color: #e13a4e;
+  color: #f2eeee;
+}
+
+.admin-body .admin-main {
+  padding-top: 56px;
+}
+
+.admin-body .admin-sidebar {
+  border: 1px solid #ffffff20;
+  border-radius: 0;
+  background: linear-gradient(160deg, #20191b, #121010 78%);
+  box-shadow: 7px 8px 0 #700816;
+  color: #f2eeee;
+}
+
+.admin-body .sidebar-avatar {
+  border-color: #fff;
+  border-radius: 0;
+  background: #b20e22;
+  color: #fff;
+  box-shadow: none;
+}
+
+.admin-body .sidebar-profile,
+.admin-body .admin-section-heading {
+  border-color: #ffffff2b;
+}
+
+.admin-body .sidebar-profile small,
+.admin-body .sidebar-caption,
+.admin-body .sidebar-note,
+.admin-body .sidebar-link {
+  color: #c1b8b9;
+}
+
+.admin-body .sidebar-link {
+  border-radius: 0;
+}
+
+.admin-body .sidebar-link > span,
+.admin-body .sidebar-note > span,
+.admin-body .sidebar-public-link span {
+  color: #e13a4e;
+}
+
+.admin-body .sidebar-link:hover,
+.admin-body .sidebar-link:focus-visible,
+.admin-body .sidebar-link.active,
+.admin-body .sidebar-link.active:hover,
+.admin-body .sidebar-link.active:focus-visible {
+  border-left-color: #e13a4e;
+  background: #b20e22;
+  color: #fff;
+}
+
+.admin-body .sidebar-link:hover > span,
+.admin-body .sidebar-link:focus-visible > span,
+.admin-body .sidebar-link.active > span {
+  color: #fff;
+}
+
+.admin-body .sidebar-public-link,
+.admin-body .sidebar-logout button {
+  border-color: #ffffff2b;
+  color: #eee8e8;
+}
+
+.admin-body .admin-content,
+.admin-body .admin-panel,
+.admin-body .dashboard-overview,
+.admin-body .stat-card,
+.admin-body .project-editor,
+.admin-body .existing-project,
+.admin-body .record-table,
+.admin-body .record-item,
+.admin-body .message-inbox,
+.admin-body .message-record,
+.admin-body .message-details,
+.admin-body .tool-editor {
+  border-color: #ffffff24;
+  border-radius: 0;
+  background: #1d1a1b;
+  color: #f2eeee;
+  box-shadow: 5px 6px 0 rgb(112 8 22 / 68%);
+}
+
+.admin-body .admin-content {
+  padding: clamp(22px, 3vw, 40px);
+}
+
+.admin-body .admin-welcome h1,
+.admin-body .overview-copy h2,
+.admin-body .admin-section-heading h2,
+.admin-body .stat-number,
+.admin-body .form-section-title h3,
+.admin-body .project-editor h3,
+.admin-body .sidebar-profile strong {
+  color: #f2eeee;
+}
+
+.admin-body .eyebrow,
+.admin-body .stat-icon,
+.admin-body .panel-doodle,
+.admin-body .notice-mark {
+  color: #e13a4e;
+}
+
+.admin-body .stat-card {
+  transform: none;
+}
+
+.admin-body .stat-card:nth-child(2) {
+  box-shadow: 5px 6px 0 #700816;
+}
+
+.admin-body .admin-notice {
+  border: 1px solid #ffffff2b;
+  border-left: 4px solid #e13a4e;
+  border-radius: 0;
+  background: #241a1c;
+  color: #f2eeee;
+  box-shadow: 6px 7px 0 #700816;
+}
+
+.admin-body .preview-banner {
+  border-color: #b20e22;
+  border-radius: 0;
+  background: #241a1c;
+  color: #f2eeee;
+  box-shadow: 3px 4px 0 #700816;
+}
+
+.admin-body .admin-panel {
+  border-radius: 0;
+}
+
+.admin-body .admin-section-heading {
+  border-bottom-style: solid;
+}
+
+.admin-body .form-section-title > span,
+.admin-body .editor-mark {
+  border: 1px solid #ffffff35;
+  border-radius: 0;
+  background: #b20e22;
+  color: #fff;
+}
+
+.admin-body .admin-form label,
+.admin-body .project-editor label {
+  color: #c1b8b9;
+}
+
+.admin-body .admin-form input:not([type=color]),
+.admin-body .admin-form textarea,
+.admin-body .admin-form select,
+.admin-body .project-editor input:not([type=color]):not([type=checkbox]),
+.admin-body .project-editor textarea,
+.admin-body .project-editor select,
+.admin-body .project-editor input[type=search],
+.admin-body .project-editor input[type=url],
+.admin-body .project-editor input[type=text] {
+  border-color: #ffffff38;
+  border-radius: 0;
+  background: #111010;
+  color: #f2eeee;
+}
+
+.admin-body .admin-form input::placeholder,
+.admin-body .admin-form textarea::placeholder,
+.admin-body .project-editor input::placeholder,
+.admin-body .project-editor textarea::placeholder {
+  color: #978d8f;
+}
+
+.admin-body .admin-form input:focus,
+.admin-body .admin-form textarea:focus,
+.admin-body .admin-form select:focus,
+.admin-body .project-editor input:focus,
+.admin-body .project-editor textarea:focus,
+.admin-body .project-editor select:focus {
+  border-color: #e13a4e;
+  box-shadow: 0 0 0 3px rgb(178 14 34 / 30%);
+}
+
+.admin-body .project-editor,
+.admin-body .new-project-editor {
+  background: #151313;
+}
+
+.admin-body .editor-mark {
+  color: #fff;
+}
+
+.admin-body .color-field,
+.admin-body .color-fields .color-field {
+  border-color: #ffffff38;
+}
+
+.admin-body .color-field strong,
+.admin-body .check-field span {
+  color: #f2eeee;
+}
+
+.admin-body .form-actions {
+  border-top-color: #ffffff2b;
+}
+
+.admin-body .button-primary {
+  border-color: #b20e22;
+  background: #b20e22;
+  color: #fff;
+  box-shadow: 4px 4px 0 #050505;
+}
+
+.admin-body .button-primary:hover {
+  box-shadow: 1px 1px 0 #050505;
+}
+
+.admin-body .button-delete {
+  border-color: #e13a4e;
+  color: #ff9aa5;
+}
+
+.admin-body .admin-footer,
+.admin-body .admin-label,
+.admin-body .stat-caption,
+.admin-body .project-id {
+  color: #c1b8b9;
+}
+
+.admin-body .admin-footer {
+  border-top-color: #ffffff24;
+}
+
+.admin-body .featured-label {
+  color: #ff9aa5;
+}
+
+.admin-body .tool-sticker-preview,
+.admin-body .preview-card {
+  border-color: #ffffff30;
+  border-radius: 0;
+  background: #111010;
+  color: #f2eeee;
+}
+
+.admin-body .badge-picker-content,
+.admin-body .badge-picker-grid,
+.admin-body .badge-tile {
+  border-color: #ffffff30;
+  background: #151313;
+  color: #f2eeee;
+}
+
+.admin-body .badge-tile:hover,
+.admin-body .badge-tile.is-picked {
+  border-color: #e13a4e;
+  background: #351218;
+}
+
+@media (max-width: 700px) {
+  .admin-body .admin-main {
+    padding-top: 38px;
+  }
+}

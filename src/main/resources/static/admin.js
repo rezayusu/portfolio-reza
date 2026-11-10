@@ -129,31 +129,6 @@ function renderBadgePickers(root = document) {
 document.addEventListener("DOMContentLoaded", () => {
   renderBadgePickers();
 
-  const adminThemeToggle = document.getElementById("adminThemeToggle");
-  if (adminThemeToggle) {
-    function setAdminTheme(dark) {
-      document.body.classList.toggle("dark", dark);
-      document.body.dataset.theme = dark ? "dark" : "light";
-      adminThemeToggle.textContent = dark ? "☾" : "☼";
-      adminThemeToggle.setAttribute("aria-pressed", String(dark));
-      adminThemeToggle.style.color = dark ? "#ffffff" : "";
-      try {
-        localStorage.setItem("admin-portfolio-theme", dark ? "dark" : "light");
-      } catch {}
-    }
-
-    let savedAdminTheme = null;
-    try {
-      savedAdminTheme = localStorage.getItem("admin-portfolio-theme");
-    } catch {}
-    if (savedAdminTheme === "dark") {
-      setAdminTheme(true);
-    }
-
-    adminThemeToggle.addEventListener("click", () => {
-      setAdminTheme(!document.body.classList.contains("dark"));
-    });
-  }
 });
 
 document.addEventListener("toggle", event => {

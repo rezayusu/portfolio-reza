@@ -24,6 +24,10 @@ public class Project {
     @Column(nullable = false, length = 50)
     private String category;
 
+    @Pattern(regexp = "^(DKV|RPL)?$")
+    @Column(length = 3)
+    private String field;
+
     @Size(max = 500)
     @Column(length = 500)
     private String imageUrl;
@@ -64,7 +68,11 @@ public class Project {
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public String getCategory() { return category; }
+    public String getField() { return field; }
     public String getImageUrl() { return imageUrl; }
+    public boolean isVideo() {
+        return imageUrl != null && imageUrl.matches("(?i).*\\.(mp4|webm|mov)(\\?.*)?$");
+    }
     public String getGalleryUrls() { return galleryUrls; }
     public String getProjectUrl() { return projectUrl; }
     public String getTechStack() { return techStack; }
@@ -74,6 +82,7 @@ public class Project {
     public void setTitle(String title) { this.title = title; }
     public void setDescription(String description) { this.description = description; }
     public void setCategory(String category) { this.category = category; }
+    public void setField(String field) { this.field = field; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public void setGalleryUrls(String galleryUrls) { this.galleryUrls = galleryUrls; }
     public void setProjectUrl(String projectUrl) { this.projectUrl = projectUrl; }

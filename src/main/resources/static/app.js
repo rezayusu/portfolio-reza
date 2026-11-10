@@ -1,25 +1,40 @@
 const $ = (selector) => document.querySelector(selector);
 const projectGrid = $("#projectGrid");
+const projectFilterBar = $("#projectFilterBar");
 const dialog = $("#projectDialog");
 const dialogContent = $("#dialogContent");
 let csrfToken = document.querySelector('meta[name="_csrf"]')?.content || "";
 let csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || "";
+const setHeroMetric = (selector, value) => {
+  const metric = $(selector);
+  if (metric) metric.textContent = String(value).padStart(2, "0");
+};
 const aboutPhotoAudio = $("#aboutHoverAudio");
 const aboutPhotoPlaceholder = $("#aboutPhoto").closest(".photo-placeholder");
 const photoAudioHint = $("#photoAudioHint");
+
+function updateAboutPhotoHint(message = "") {
+  const canSwapPhoto = aboutPhotoPlaceholder.classList.contains("has-photo-swap");
+  const canPlayAudio = Boolean(aboutPhotoAudio.src);
+  photoAudioHint.hidden = !canSwapPhoto && !canPlayAudio && !message;
+  photoAudioHint.textContent = message
+    ? `${canSwapPhoto ? "Hover/tap: foto · " : ""}${message}`
+    : [
+      canSwapPhoto ? "Hover/tap: foto 2" : "",
+      canPlayAudio ? (canSwapPhoto ? " · klik: musik ♫" : "Hover/klik: musik ♫") : ""
+    ].join("");
+}
 
 function playAboutPhotoAudio() {
   if (!aboutPhotoAudio.src) return;
   const playback = aboutPhotoAudio.play();
   if (playback) {
-    playback.then(() => {
-      photoAudioHint.textContent = "Hover / klik untuk dengar ♫";
-    }).catch(error => {
+    playback.catch(error => {
       if (error.name === "NotAllowedError") {
-        photoAudioHint.textContent = "Klik foto untuk memutar lagu ♫";
+        updateAboutPhotoHint("Klik foto untuk memutar lagu ♫");
       } else {
         console.error("Could not play the About photo audio.", error);
-        photoAudioHint.textContent = "Lagu tidak dapat diputar.";
+        updateAboutPhotoHint("Lagu tidak dapat diputar.");
       }
     });
   }
@@ -31,14 +46,38 @@ function stopAboutPhotoAudio() {
   aboutPhotoAudio.currentTime = 0;
 }
 
-aboutPhotoPlaceholder.addEventListener("pointerenter", playAboutPhotoAudio);
-aboutPhotoPlaceholder.addEventListener("pointerleave", stopAboutPhotoAudio);
-aboutPhotoPlaceholder.addEventListener("click", playAboutPhotoAudio);
-aboutPhotoPlaceholder.addEventListener("focus", playAboutPhotoAudio);
-aboutPhotoPlaceholder.addEventListener("blur", stopAboutPhotoAudio);
+function setAboutPhotoSwapped(swapped) {
+  if (!aboutPhotoPlaceholder.classList.contains("has-photo-swap")) return;
+  aboutPhotoPlaceholder.classList.toggle("is-photo-swapped", swapped);
+  aboutPhotoPlaceholder.setAttribute("aria-pressed", String(swapped));
+}
+
+aboutPhotoPlaceholder.addEventListener("pointerenter", () => {
+  setAboutPhotoSwapped(true);
+  playAboutPhotoAudio();
+});
+aboutPhotoPlaceholder.addEventListener("pointerleave", () => {
+  setAboutPhotoSwapped(false);
+  stopAboutPhotoAudio();
+});
+aboutPhotoPlaceholder.addEventListener("click", () => {
+  if (window.matchMedia("(hover: none)").matches) {
+    setAboutPhotoSwapped(!aboutPhotoPlaceholder.classList.contains("is-photo-swapped"));
+  }
+  playAboutPhotoAudio();
+});
+aboutPhotoPlaceholder.addEventListener("focus", () => {
+  setAboutPhotoSwapped(true);
+  playAboutPhotoAudio();
+});
+aboutPhotoPlaceholder.addEventListener("blur", () => {
+  setAboutPhotoSwapped(false);
+  stopAboutPhotoAudio();
+});
 aboutPhotoPlaceholder.addEventListener("keydown", event => {
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
+    setAboutPhotoSwapped(!aboutPhotoPlaceholder.classList.contains("is-photo-swapped"));
     playAboutPhotoAudio();
   }
 });
@@ -65,37 +104,12 @@ mainNav.querySelectorAll("a").forEach(link => link.addEventListener("click", () 
   menuToggle.setAttribute("aria-expanded", "false");
 }));
 
-function setTheme(dark) {
-  document.body.classList.toggle("dark", dark);
-  document.body.dataset.theme = dark ? "dark" : "light";
-  $("#themeToggle").textContent = dark ? "☾" : "☼";
-  $("#themeToggle").setAttribute("aria-pressed", String(dark));
-  try {
-    localStorage.setItem("portfolio-theme", dark ? "dark" : "light");
-  } catch {
-    // Keep the selected theme for this page even when browser storage is unavailable.
-  }
-}
-
-let savedTheme = null;
-try {
-  savedTheme = localStorage.getItem("portfolio-theme");
-} catch {
-  // Use the light theme when browser storage is unavailable.
-}
-if (savedTheme === "dark") {
-  setTheme(true);
-}
-
-$("#themeToggle").addEventListener("click", () => {
-  setTheme(!document.body.classList.contains("dark"));
-});
-
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add("is-visible");
-      observer.unobserve(entry.target);
+    } else {
+      entry.target.classList.remove("is-visible");
     }
   });
 }, { threshold: 0.12 });
@@ -108,6 +122,34 @@ function observeMotionElements(root = document) {
   });
 }
 observeMotionElements();
+
+const parallaxSections = [...document.querySelectorAll(".hero, .section-block")];
+if (parallaxSections.length && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  let parallaxFrame = 0;
+  const updateParallax = () => {
+    parallaxFrame = 0;
+    parallaxSections.forEach(section => {
+      const bounds = section.getBoundingClientRect();
+      if (section.matches(".hero")) {
+        const scrollOffset = Math.max(0, Math.min(section.offsetHeight, -bounds.top));
+        section.style.setProperty("--hero-scroll", `${scrollOffset}px`);
+        section.style.setProperty("--hero-background-shift", `${scrollOffset * 0.5}px`);
+      } else {
+        const sectionOffset = Math.max(
+          -260,
+          Math.min(260, bounds.top + bounds.height / 2 - window.innerHeight / 2)
+        );
+        section.style.setProperty("--section-parallax", `${sectionOffset}px`);
+        section.style.setProperty("--section-background-shift", `${sectionOffset * -0.7}px`);
+      }
+    });
+  };
+  window.addEventListener("scroll", () => {
+    if (!parallaxFrame) parallaxFrame = window.requestAnimationFrame(updateParallax);
+  }, { passive: true });
+  window.addEventListener("resize", updateParallax, { passive: true });
+  updateParallax();
+}
 
 function isVideoUrl(url = "") {
   return /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
@@ -133,18 +175,91 @@ function setFooterSocialLink(selector, value) {
   link.hidden = false;
 }
 function renderProject(project, index) {
-  const image = safeUrl(project.imageUrl || "");
+  const galleryMedia = (project.galleryUrls || "").split(/[,;\n]+/).map(url => safeUrl(url.trim())).filter(Boolean);
+  const primaryMedia = safeUrl(project.imageUrl || "");
+  const image = primaryMedia && !isVideoUrl(primaryMedia)
+    ? primaryMedia
+    : galleryMedia.find(url => !isVideoUrl(url)) || "";
+  const galleryVideo = galleryMedia.find(isVideoUrl) || "";
   const accentColor = /^#[0-9a-fA-F]{6}$/.test(project.accentColor || "") ? project.accentColor : "#f4d66d";
   const tech = (project.techStack || "").split(",").map(x => x.trim()).filter(Boolean).slice(0, 4);
-  return `<button class="project-card" type="button" data-project-id="${Number(project.id)}" style="--project-accent:${accentColor}" aria-label="View ${escapeHtml(project.title)} details">
-    <div class="project-image">${image ? `<img loading="lazy" src="${escapeHtml(image)}" alt="${escapeHtml(project.title)} project preview">` : ""}
+  const field = ["DKV", "RPL"].includes(project.field) ? project.field : "";
+  const preview = `${image ? `<img loading="lazy" src="${escapeHtml(image)}" alt="${escapeHtml(project.title)} project preview">` : ""}${galleryVideo ? `<video class="project-preview-video" src="${escapeHtml(galleryVideo)}" muted loop playsinline preload="none" aria-hidden="true"></video>` : ""}`;
+  return `<button class="project-card" type="button" data-project-id="${Number(project.id)}" data-project-field="${field}" style="--project-accent:${accentColor}" aria-label="View ${escapeHtml(project.title)} details">
+    <div class="project-image">${preview}
       <span class="project-number">NO. 0${index + 1}</span></div>
-    <div class="project-content"><span class="project-category">${escapeHtml(project.category)}</span>
+    <div class="project-content"><div class="project-labels">${field ? `<span class="project-field">${field}</span>` : ""}<span class="project-category">${escapeHtml(project.category)}</span></div>
       <h3>${escapeHtml(project.title)}</h3><p>${escapeHtml(project.description)}</p>
       <div class="tech-tags">${tech.map(item => `<span>${escapeHtml(item)}</span>`).join("")}</div></div></button>`;
 }
+
+function playProjectPreview(card) {
+  const video = card.querySelector(".project-preview-video");
+  if (!video) return;
+  video.currentTime = 0;
+  card.classList.add("is-preview-playing");
+  video.play().catch(error => {
+    card.classList.remove("is-preview-playing");
+    if (error.name !== "AbortError") {
+      console.error("Could not play the project preview video.", error);
+    }
+  });
+}
+
+function stopProjectPreview(card) {
+  const video = card.querySelector(".project-preview-video");
+  if (!video) return;
+  card.classList.remove("is-preview-playing");
+  video.pause();
+  video.currentTime = 0;
+}
+
 let projectsCache = [];
 let educationCache = [];
+let activeProjectFilter = "";
+
+function renderProjectFilters() {
+  const filters = [
+    ["DKV", "DKV", projectsCache.filter(project => project.field === "DKV").length],
+    ["RPL", "RPL", projectsCache.filter(project => project.field === "RPL").length]
+  ];
+  if (!activeProjectFilter) {
+    activeProjectFilter = filters.find(([, , count]) => count > 0)?.[0] || filters[0][0];
+  }
+  projectFilterBar.innerHTML = filters.map(([value, label, count]) =>
+    `<button type="button" data-project-filter="${value}" class="${value === activeProjectFilter ? "is-active" : ""}" aria-pressed="${value === activeProjectFilter}">${label}<span class="filter-count">${count}</span></button>`
+  ).join("");
+}
+
+function updateProjectFilterResults() {
+  const cards = [...projectGrid.querySelectorAll(".project-card")];
+  const visibleCount = cards.filter(card => card.dataset.projectField === activeProjectFilter).length;
+  cards.forEach(card => {
+    const matches = Boolean(activeProjectFilter) && card.dataset.projectField === activeProjectFilter;
+    card.hidden = !matches;
+    if (!matches) stopProjectPreview(card);
+  });
+
+  const prompt = projectGrid.querySelector(".project-filter-prompt");
+  if (prompt) {
+    prompt.hidden = visibleCount > 0;
+    prompt.textContent = activeProjectFilter
+      ? `Belum ada project untuk bidang ${activeProjectFilter}.`
+      : "Pilih bidang DKV atau RPL untuk melihat project.";
+  }
+}
+
+projectFilterBar.addEventListener("click", event => {
+  const button = event.target.closest("[data-project-filter]");
+  if (!button) return;
+  activeProjectFilter = button.dataset.projectFilter;
+  projectFilterBar.querySelectorAll("[data-project-filter]").forEach(filter => {
+    const active = filter === button;
+    filter.classList.toggle("is-active", active);
+    filter.setAttribute("aria-pressed", String(active));
+  });
+  updateProjectFilterResults();
+});
 
 async function loadSiteContent() {
   try {
@@ -164,7 +279,8 @@ async function loadSiteContent() {
     });
     $("#brandName").textContent = content.displayName;
     $("#displayName").textContent = content.displayName;
-    $("#codeName").textContent = `'${content.displayName}'`;
+    const codeName = $("#codeName");
+    if (codeName) codeName.textContent = `'${content.displayName}'`;
     $("#photoInitial").textContent = content.displayName.trim().charAt(0).toUpperCase();
     $("#footerName").textContent = content.displayName;
     $("#heroLine").textContent = content.heroLine;
@@ -176,29 +292,53 @@ async function loadSiteContent() {
     setFooterSocialLink("#whatsappLink", content.whatsappUrl);
     setFooterSocialLink("#instagramLink", content.instagramUrl);
     setFooterSocialLink("#githubLink", content.githubUrl);
-    document.documentElement.style.setProperty("--coral", content.primaryColor);
-    document.documentElement.style.setProperty("--sage", content.accentColor);
-    document.documentElement.style.setProperty("--paper", content.backgroundColor);
-    document.documentElement.style.setProperty("--paper2", `color-mix(in srgb, ${content.backgroundColor} 70%, white)`);
     const photoUrl = safeUrl(content.aboutPhotoUrl || "");
     const secondPhotoUrl = safeUrl(content.aboutPhotoSecondUrl || "");
     const firstPhoto = $("#aboutPhoto");
     const secondPhoto = $("#aboutPhotoSecond");
     const hoverAudioUrl = safeUrl(content.aboutHoverAudioUrl || "");
     const photoPlaceholder = firstPhoto.closest(".photo-placeholder");
+    const updatePhotoInteraction = () => {
+      const canSwapPhoto = Boolean(photoUrl && secondPhotoUrl && photoPlaceholder.classList.contains("has-photo-swap"));
+      const canPlayAudio = Boolean(hoverAudioUrl);
+      photoPlaceholder.classList.remove("is-photo-swapped");
+      if (canSwapPhoto || canPlayAudio) {
+        photoPlaceholder.tabIndex = 0;
+        photoPlaceholder.setAttribute("role", "button");
+        photoPlaceholder.setAttribute("aria-label", [
+          canSwapPhoto ? "Arahkan kursor atau fokus untuk mengganti foto." : "",
+          canPlayAudio ? "Klik atau arahkan kursor untuk memutar lagu." : ""
+        ].filter(Boolean).join(" "));
+        photoPlaceholder.setAttribute("aria-pressed", "false");
+      } else {
+        photoPlaceholder.removeAttribute("tabindex");
+        photoPlaceholder.removeAttribute("role");
+        photoPlaceholder.removeAttribute("aria-label");
+        photoPlaceholder.removeAttribute("aria-pressed");
+      }
+      updateAboutPhotoHint();
+    };
+    firstPhoto.onerror = () => {
+      firstPhoto.style.display = "none";
+      $("#photoInitial").style.display = "";
+      photoPlaceholder.classList.remove("has-photo-swap");
+      updatePhotoInteraction();
+    };
+    secondPhoto.onerror = () => {
+      secondPhoto.style.display = "none";
+      photoPlaceholder.classList.remove("has-photo-swap");
+      updatePhotoInteraction();
+    };
+    secondPhoto.onload = () => {
+      if (photoUrl && secondPhotoUrl) photoPlaceholder.classList.add("has-photo-swap");
+      updatePhotoInteraction();
+    };
     if (hoverAudioUrl) {
       aboutPhotoAudio.src = hoverAudioUrl;
-      photoAudioHint.hidden = false;
-      photoPlaceholder.tabIndex = 0;
-      photoPlaceholder.setAttribute("role", "button");
-      photoPlaceholder.setAttribute("aria-label", "Foto profil. Arahkan kursor atau fokus untuk memutar lagu.");
     } else {
       aboutPhotoAudio.removeAttribute("src");
-      photoAudioHint.hidden = true;
-      photoPlaceholder.removeAttribute("tabindex");
-      photoPlaceholder.removeAttribute("role");
-      photoPlaceholder.removeAttribute("aria-label");
     }
+    photoPlaceholder.classList.remove("has-photo-swap", "is-photo-swapped");
     const visiblePhotoUrl = photoUrl || secondPhotoUrl;
     if (visiblePhotoUrl) {
       firstPhoto.src = visiblePhotoUrl;
@@ -212,12 +352,14 @@ async function loadSiteContent() {
     if (photoUrl && secondPhotoUrl) {
       secondPhoto.src = secondPhotoUrl;
       secondPhoto.style.display = "block";
-      photoPlaceholder.classList.add("has-photo-swap");
+      if (secondPhoto.complete && secondPhoto.naturalWidth > 0) {
+        photoPlaceholder.classList.add("has-photo-swap");
+      }
     } else {
       secondPhoto.removeAttribute("src");
       secondPhoto.style.display = "none";
-      photoPlaceholder.classList.remove("has-photo-swap");
     }
+    updatePhotoInteraction();
   } catch (error) {
     console.error("Could not load saved portfolio content.", error);
   }
@@ -229,6 +371,7 @@ async function loadToolbox() {
     const response = await fetch("/api/toolbox", { headers: { "Accept": "application/json" } });
     if (!response.ok) throw new Error("Could not load toolbox");
     const tools = await response.json();
+    setHeroMetric("#heroToolCount", tools.length);
     if (!tools.length) {
       toolboxGrid.innerHTML = '<p class="loading-note">Belum ada tools yang ditambahkan nih.</p>';
       return;
@@ -298,6 +441,7 @@ async function loadCertificates() {
     const response = await fetch("/api/certificates", { headers: { "Accept": "application/json" } });
     if (!response.ok) throw new Error("Could not load certificates");
     const certificates = await response.json();
+    setHeroMetric("#heroCertificateCount", certificates.length);
     if (!certificates.length) {
       certificateGrid.innerHTML = '<p class="loading-note">Sertifikat akan segera ditambahkan.</p>';
       return;
@@ -348,14 +492,24 @@ async function loadProjects() {
     const response = await fetch("/api/projects", { headers: { "Accept": "application/json" } });
     if (!response.ok) throw new Error("Could not load projects");
     projectsCache = await response.json();
+    setHeroMetric("#heroProjectCount", projectsCache.length);
+    renderProjectFilters();
     if (!projectsCache.length) {
       projectGrid.innerHTML = '<p class="loading-note">Belum ada project nih — yuk tambahin project pertama!</p>';
       return;
     }
-    projectGrid.innerHTML = projectsCache.map(renderProject).join("");
+    projectGrid.innerHTML = `${projectsCache.map(renderProject).join("")}<p class="project-filter-prompt" role="status">Pilih bidang DKV atau RPL untuk melihat project.</p>`;
+    updateProjectFilterResults();
     observeMotionElements(projectGrid);
     projectGrid.querySelectorAll(".project-card").forEach(card => {
+      card.addEventListener("pointerenter", event => {
+        if (event.pointerType !== "touch") playProjectPreview(card);
+      });
+      card.addEventListener("pointerleave", () => stopProjectPreview(card));
+      card.addEventListener("focus", () => playProjectPreview(card));
+      card.addEventListener("blur", () => stopProjectPreview(card));
       card.addEventListener("click", () => {
+        stopProjectPreview(card);
         const project = projectsCache.find(item => item.id === Number(card.dataset.projectId));
         if (!project) return;
         const mainImage = safeUrl(project.imageUrl || "");
