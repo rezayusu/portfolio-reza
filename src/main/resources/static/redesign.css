@@ -72,7 +72,7 @@ body::before {
     width: 100%;
     z-index: 1000;
 
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
 
@@ -366,6 +366,12 @@ body::before {
   border-color: var(--signal);
 }
 
+.hero,
+.section-block,
+.site-footer {
+  opacity: var(--scroll-fade, 1);
+}
+
 .section-block {
   position: relative;
   isolation: isolate;
@@ -376,7 +382,7 @@ body::before {
   padding-top: clamp(72px, 9vw, 118px);
   padding-bottom: clamp(72px, 9vw, 118px);
   background:
-    radial-gradient(ellipse at 74% calc(50% + var(--section-parallax, 0px) * .7), rgb(178 14 34 / 16%), transparent 56%),
+    radial-gradient(ellipse at 74% calc(50% + var(--section-parallax, 0px) * .95), rgb(178 14 34 / 16%), transparent 56%),
     var(--section-background, #111010);
   background-size: 100% 200%, 100% 100%;
   background-position: center calc(50% + var(--section-background-shift, 0px)), center;
@@ -384,7 +390,7 @@ body::before {
 }
 
 .section-block > * {
-  translate: 0 calc(var(--section-parallax, 0px) * -.12);
+  translate: 0 calc(var(--section-parallax, 0px) * -.22);
   will-change: translate;
 }
 
@@ -694,7 +700,7 @@ body::before {
 }
 
 .project-category {
-  color: var(--signal);
+  color: var(--ink);
   font: 9px var(--mono);
   letter-spacing: .15em;
   text-transform: uppercase;
@@ -1122,8 +1128,8 @@ body::before {
   color: #fff;
   isolation: isolate;
   background:
-    radial-gradient(ellipse at 3% calc(30% + var(--hero-scroll, 0px) * .45), rgb(191 18 47 / 86%) 0, transparent 35%),
-    radial-gradient(ellipse at 76% calc(105% + var(--hero-scroll, 0px) * .45), rgb(151 12 33 / 90%) 0, transparent 56%),
+    radial-gradient(ellipse at 3% calc(30% + var(--hero-scroll, 0px) * .65), rgb(191 18 47 / 86%) 0, transparent 35%),
+    radial-gradient(ellipse at 76% calc(105% + var(--hero-scroll, 0px) * .65), rgb(151 12 33 / 90%) 0, transparent 56%),
     linear-gradient(128deg, #211315 0%, #110f10 52%, #2a1015 100%);
   background-size: 100% 180%;
   background-position: center calc(50% + var(--hero-background-shift, 0px));
@@ -1175,6 +1181,12 @@ body::before {
   align-items: stretch;
 }
 
+.hero-copy > :not(.hero-title-wrap),
+.hero-signature {
+  scale: calc(1 + var(--hero-progress, 0) * .22);
+  transform-origin: center;
+}
+
 .hero-role {
   margin: 0;
   color: rgb(255 255 255 / 92%) !important;
@@ -1205,7 +1217,7 @@ body::before {
   letter-spacing: -.045em;
   text-align: center;
   white-space: nowrap;
-  transform: translateX(-50%) scaleX(1.00) translateY(calc(var(--hero-scroll, 0px) * .2));
+  transform: translateX(-50%) translateY(var(--hero-scroll, 0px)) scale(calc(1 - var(--hero-progress, 0) * .35));
   transform-origin: center;
 }
 
@@ -1218,7 +1230,7 @@ body::before {
   color: #bb3737;
   font: 400 clamp(72px, 14vw, 190px)/.72 'Allura', cursive;
   white-space: nowrap;
-  transform: translate(-50%, -40%) rotate(-5deg) translateY(calc(var(--hero-scroll, 0px) * -.25));
+  transform: translate(-50%, -40%) rotate(-5deg) translateY(calc(var(--hero-scroll, 0px) * -.4));
 }
 
 .hero-context {
@@ -1247,7 +1259,9 @@ body::before {
   padding: 0 21px;
   border: 1px solid rgb(255 255 255 / 45%);
   border-radius: 30px;
-  color: #fff;
+   background: rgba(230, 227, 227, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   font: 400 17px var(--display);
   transition: color .2s ease, background-color .2s ease, border-color .2s ease;
 }
@@ -1450,6 +1464,7 @@ body::before {
 
   .hero {
     --hero-scroll: 0px;
+    --hero-progress: 0;
   }
 
   .section-block > * {
@@ -1462,7 +1477,7 @@ body::before {
   }
 
   .hero .portfolio-title {
-    transform: translateX(-50%) scaleX(1);
+    transform: translateX(-50%) scale(1);
     will-change: auto;
   }
 

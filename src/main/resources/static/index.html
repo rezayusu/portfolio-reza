@@ -11,12 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/styles.css?v=36">
-  <link rel="stylesheet" href="/redesign.css?v=33">
+  <link rel="stylesheet" href="/styles.css?v=37">
+  <link rel="stylesheet" href="/redesign.css?v=38">
   <script defer src="/color-bends.js?v=3"></script>
-  <script defer src="/app.js?v=40"></script>
-  <script defer src="/tech-text.js?v=1"></script>
+  <script defer src="/app.js?v=46"></script>
 </head>
 <body class="dark">
   <canvas id="colorBends" class="color-bends-background" aria-hidden="true"></canvas>
@@ -61,7 +59,7 @@
             <div class="photo-placeholder"><img id="aboutPhoto" alt="Foto profil Abang"><img id="aboutPhotoSecond" alt="Foto profil kedua Abang"><span class="photo-sun">☼</span><span class="photo-initial" id="photoInitial">R</span><span class="photo-spark">✦</span><span id="photoAudioHint" class="photo-audio-hint" hidden>Hover / klik untuk dengar ♫</span></div>
             <p class="handwritten">Ganteng Gasih Itu Yang Diatas ↗</p>
           </div>
-          <span class="tape photo-tape"></span><span class="tiny-doodle"> itu Abang!</span>
+
         </div>
         <div class="about-copy reveal">
           <p class="eyebrow">SALAM KENAL SEMUANYA</p>
@@ -105,9 +103,9 @@
       <div class="contact-grid">
         <div class="contact-copy reveal"><p class="eyebrow"> PUNYA IDE SERU?</p><h2>Yuk bikin<br>sesuatu yang <span class="marker-highlight">keren.</span></h2><p>Punya project, pertanyaan, atau cuma mau nyapa Abang? Kirim pesan lewat kotak pesan ini.</p><p class="handwritten contact-signoff">sampai jumpa, tetap berkarya ✿</p><div class="contact-doodles" aria-hidden="true"><span class="contact-doodle-star doodle-star-one">✳</span><span class="contact-doodle-star doodle-star-two">✦</span><span class="contact-doodle-star doodle-star-three">✷</span><span class="doodle-sparkle">✧</span><span class="doodle-note"><span>kode dengan logika</span><strong>tumbuh dengan inovasi</strong></span><span class="doodle-tape"></span></div></div>
         <form id="contactForm" class="contact-form reveal">
-          <label for="name">Nama Abang</label><input id="name" name="name" maxlength="80" required placeholder="Siapa nama Abang?">
-          <label for="email">Alamat email</label><input id="email" name="email" type="email" maxlength="160" required placeholder="abang@contoh.com">
-          <label for="message">Pesan Abang</label><textarea id="message" name="message" maxlength="2000" rows="4" required placeholder="Ceritain apa yang lagi Abang pikirin..."></textarea>
+          <label for="name">Nama Kamu</label><input id="name" name="name" autocomplete="name" maxlength="80" required placeholder="Siapa nama kamu ?">
+          <label for="email">Alamat email</label><input id="email" name="email" type="email" autocomplete="email" maxlength="160" required placeholder="contoh@gmail.com">
+          <label for="message">Pesan Kamu</label><textarea id="message" name="message" maxlength="2000" rows="4" required placeholder="Ulasannya dong hehe atau apa aja..."></textarea>
           <button class="button-primary submit-button" type="submit">Kirim pesan ke Abang <span>↗</span></button>
           <p id="formStatus" class="form-status" role="status"></p>
         </form>

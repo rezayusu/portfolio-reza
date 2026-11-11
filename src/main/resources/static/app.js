@@ -124,23 +124,32 @@ function observeMotionElements(root = document) {
 observeMotionElements();
 
 const parallaxSections = [...document.querySelectorAll(".hero, .section-block")];
+const scrollFadeSections = [...parallaxSections, ...document.querySelectorAll(".site-footer")];
 if (parallaxSections.length && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   let parallaxFrame = 0;
   const updateParallax = () => {
     parallaxFrame = 0;
+    const viewportHeight = window.innerHeight;
+    scrollFadeSections.forEach(section => {
+      const bounds = section.getBoundingClientRect();
+      const visibleHeight = Math.max(0, Math.min(bounds.bottom, viewportHeight) - Math.max(bounds.top, 0));
+      const visibleRatio = visibleHeight / Math.min(bounds.height, viewportHeight);
+      section.style.setProperty("--scroll-fade", `${Math.min(1, visibleRatio / 0.65)}`);
+    });
     parallaxSections.forEach(section => {
       const bounds = section.getBoundingClientRect();
       if (section.matches(".hero")) {
         const scrollOffset = Math.max(0, Math.min(section.offsetHeight, -bounds.top));
         section.style.setProperty("--hero-scroll", `${scrollOffset}px`);
-        section.style.setProperty("--hero-background-shift", `${scrollOffset * 0.5}px`);
+        section.style.setProperty("--hero-progress", `${scrollOffset / section.offsetHeight}`);
+        section.style.setProperty("--hero-background-shift", `${scrollOffset * 0.8}px`);
       } else {
         const sectionOffset = Math.max(
           -260,
           Math.min(260, bounds.top + bounds.height / 2 - window.innerHeight / 2)
         );
         section.style.setProperty("--section-parallax", `${sectionOffset}px`);
-        section.style.setProperty("--section-background-shift", `${sectionOffset * -0.7}px`);
+        section.style.setProperty("--section-background-shift", `${sectionOffset * -0.95}px`);
       }
     });
   };
@@ -160,6 +169,7 @@ function escapeHtml(value = "") {
   })[char]);
 }
 function safeUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
   try {
     const url = new URL(value, window.location.origin);
     return ["http:", "https:"].includes(url.protocol) ? url.href : "";
@@ -498,7 +508,14 @@ async function loadProjects() {
       projectGrid.innerHTML = '<p class="loading-note">Belum ada project nih — yuk tambahin project pertama!</p>';
       return;
     }
-    projectGrid.innerHTML = `${projectsCache.map(renderProject).join("")}<p class="project-filter-prompt" role="status">Pilih bidang DKV atau RPL untuk melihat project.</p>`;
+    const projectNumbers = new Map();
+    const projectCards = projectsCache.map(project => {
+      const field = project.field || "";
+      const index = projectNumbers.get(field) || 0;
+      projectNumbers.set(field, index + 1);
+      return renderProject(project, index);
+    });
+    projectGrid.innerHTML = `${projectCards.join("")}<p class="project-filter-prompt" role="status">Pilih bidang DKV atau RPL untuk melihat project.</p>`;
     updateProjectFilterResults();
     observeMotionElements(projectGrid);
     projectGrid.querySelectorAll(".project-card").forEach(card => {
@@ -528,20 +545,22 @@ async function loadProjects() {
         dialogContent.innerHTML = `
           <span class="project-category">${escapeHtml(project.category)}</span>
           <h2 class="dialog-title">${escapeHtml(project.title)}</h2>
-          <div class="dialog-gallery-container">
-            <div class="dialog-active-shot-wrap">
-              ${renderActiveMedia(mediaItems[0])}
-            </div>
-            ${mediaItems.length > 1 ? `
-              <div class="dialog-thumbs" aria-label="Media gallery">
-                ${mediaItems.map((m, i) => `
-                  <button type="button" class="dialog-thumb-btn ${i === 0 ? 'is-active' : ''}" data-media-src="${escapeHtml(m)}" data-is-video="${isVideoUrl(m)}">
-                    ${isVideoUrl(m) ? '<div class="dialog-thumb-video-badge">▶ Video</div>' : `<img src="${escapeHtml(m)}" alt="Media ${i+1}" loading="lazy">`}
-                  </button>
-                `).join("")}
+          ${mediaItems.length ? `
+            <div class="dialog-gallery-container">
+              <div class="dialog-active-shot-wrap">
+                ${renderActiveMedia(mediaItems[0])}
               </div>
-            ` : ''}
-          </div>
+              ${mediaItems.length > 1 ? `
+                <div class="dialog-thumbs" aria-label="Media gallery">
+                  ${mediaItems.map((m, i) => `
+                    <button type="button" class="dialog-thumb-btn ${i === 0 ? 'is-active' : ''}" data-media-src="${escapeHtml(m)}" data-is-video="${isVideoUrl(m)}">
+                      ${isVideoUrl(m) ? '<div class="dialog-thumb-video-badge">▶ Video</div>' : `<img src="${escapeHtml(m)}" alt="Media ${i+1}" loading="lazy">`}
+                    </button>
+                  `).join("")}
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
           <p class="dialog-description">${escapeHtml(project.description)}</p>
           <p class="tech-tags">${(project.techStack || "").split(",").map(t => `<span>${escapeHtml(t.trim())}</span>`).join("")}</p>
           ${link ? `<a class="dialog-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Kunjungi project ↗</a>` : ""}`;

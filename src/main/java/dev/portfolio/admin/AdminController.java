@@ -63,7 +63,7 @@ public class AdminController {
             "displayName", "heroLine", "heroTagline", "heroDescription",
             "aboutHeadline", "aboutDescription", "aboutExtraDescription",
             "aboutPhotoUrl", "aboutPhotoSecondUrl", "aboutHoverAudioUrl",
-            "logoUrl", "whatsappUrl", "instagramUrl", "tiktokUrl");
+            "logoUrl", "whatsappUrl", "instagramUrl", "githubUrl");
         binder.registerCustomEditor(String.class, new StringTrimmerEditor(true));
     }
 

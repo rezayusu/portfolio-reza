@@ -3,14 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#111010">
+  <meta name="theme-color" content="#100d0e">
   <title>Dashboard Admin — RezzPortfolio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=29">
-  <link rel="stylesheet" href="/admin.css?v=34">
-  <link rel="stylesheet" href="/admin-redesign.css?v=1">
+  <link rel="stylesheet" href="/admin.css?v=37">
   <script defer src="/admin.js?v=20"></script>
 </head>
 <body class="admin-body dark" th:attr="data-preview-mode=${previewMode}">
@@ -21,16 +19,15 @@
   </header>
 
   <main class="admin-main">
-    <div class="admin-notice" role="status" aria-live="polite" th:if="${notice}">
-      <span class="notice-mark">✳</span><span th:text="${notice}"></span>
-    </div>
-    <aside class="preview-banner" th:if="${previewMode}" role="status">
-      <span class="preview-banner-mark">✳</span>
-      <span><strong>Mode pratinjau</strong><small>Dashboard ini hanya untuk dilihat. Login untuk mengedit konten.</small></span>
-      <a href="/admin">Login untuk mengedit ↗</a>
-    </aside>
-
     <div class="admin-layout">
+      <div class="admin-notice" role="status" aria-live="polite" th:if="${notice}">
+        <span class="notice-mark">✳</span><span th:text="${notice}"></span>
+      </div>
+      <aside class="preview-banner" th:if="${previewMode}" role="status">
+        <span class="preview-banner-mark">✳</span>
+        <span><strong>Mode pratinjau</strong><small>Dashboard ini hanya untuk dilihat. Login untuk mengedit konten.</small></span>
+        <a href="/admin">Login untuk mengedit ↗</a>
+      </aside>
       <aside class="admin-sidebar">
         <div class="sidebar-profile"><span class="sidebar-avatar" th:text="${#strings.substring(content.displayName, 0, 1)}">R</span><div><strong th:text="${content.displayName}">Reza</strong><small>Editor portofolio</small></div></div>
         <p class="sidebar-caption">WORKSPACE ABANG</p>
@@ -101,7 +98,7 @@
           </div>
           <label>URL WhatsApp<input type="url" th:field="*{whatsappUrl}" maxlength="500" placeholder="https://wa.me/628123456789"></label>
           <label>URL Instagram<input type="url" th:field="*{instagramUrl}" maxlength="500" placeholder="https://instagram.com/username"></label>
-          <label class="field-wide">URL TikTok<input type="url" th:field="*{tiktokUrl}" maxlength="500" placeholder="https://tiktok.com/@username"></label>
+          <label class="field-wide">URL GitHub<input type="url" th:field="*{githubUrl}" maxlength="500" placeholder="https://github.com/username"></label>
         </div>
 
         <div class="form-actions"><span class="field-hint">Perubahan akan langsung tampil di portofolio publik setelah disimpan.</span><button class="button-primary" type="submit">Simpan cerita portofolio <span>↗</span></button></div>
