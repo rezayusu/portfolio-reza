@@ -129,6 +129,37 @@ function renderBadgePickers(root = document) {
 document.addEventListener("DOMContentLoaded", () => {
   renderBadgePickers();
 
+  const menuToggle = document.querySelector(".admin-menu-toggle");
+  const sidebar = document.querySelector(".admin-sidebar");
+  const compactMenuQuery = window.matchMedia("(max-width: 1100px)");
+
+  if (menuToggle && sidebar) {
+    const setMenuOpen = open => {
+      const isOpen = open && compactMenuQuery.matches;
+      sidebar.classList.toggle("is-open", isOpen);
+      menuToggle.setAttribute("aria-expanded", String(isOpen));
+      menuToggle.setAttribute("aria-label", isOpen ? "Tutup menu navigasi" : "Buka menu navigasi");
+      document.body.classList.toggle("admin-menu-open", isOpen);
+    };
+
+    menuToggle.addEventListener("click", () => {
+      setMenuOpen(menuToggle.getAttribute("aria-expanded") !== "true");
+    });
+    sidebar.querySelectorAll(".sidebar-link").forEach(link => {
+      link.addEventListener("click", () => setMenuOpen(false));
+    });
+    document.addEventListener("click", event => {
+      if (menuToggle.getAttribute("aria-expanded") !== "true" || !(event.target instanceof Node)) return;
+      if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) setMenuOpen(false);
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && menuToggle.getAttribute("aria-expanded") === "true") {
+        setMenuOpen(false);
+        menuToggle.focus();
+      }
+    });
+    compactMenuQuery.addEventListener("change", () => setMenuOpen(false));
+  }
 });
 
 document.addEventListener("toggle", event => {

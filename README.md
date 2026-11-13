@@ -24,13 +24,13 @@ Aplikasi portofolio pribadi bergaya scrapbook. Frontend publik menggunakan HTML,
 - Dashboard admin untuk mengubah konten, tampilan, project, pendidikan, sertifikat, toolbox, dan melihat pesan.
 - Upload gambar dan lagu untuk foto About. Lagu bisa diputar saat foto di-hover; tersedia juga URL media.
 - Form kontak menyimpan pesan dan mencoba mengirimkan notifikasi email melalui SMTP.
-- Tema terang/gelap, navigasi mobile, animasi reveal, dan detail project dalam modal.
+- Navigasi mobile, animasi reveal, dan detail project dalam modal.
 
 ## Teknologi
 
 | Bagian | Teknologi |
 |---|---|
-| Frontend publik | HTML, CSS, JavaScript, Tailwind CSS melalui CDN |
+| Frontend publik | HTML, CSS, JavaScript; Google Fonts melalui CDN |
 | View dashboard admin | Thymeleaf |
 | Backend | Java 25, Spring Boot 3.5 |
 | Web/API | Spring Web MVC |
@@ -66,6 +66,20 @@ Kedua tampilan memakai backend yang sama, tetapi cara komunikasinya berbeda:
 - Halaman publik adalah frontend statis di `src/main/resources/static`. JavaScript meminta data lewat endpoint REST dan menerima JSON.
 - Dashboard admin adalah halaman server-rendered di `src/main/resources/templates`. Controller mengisi model Thymeleaf, lalu browser mengirim formulir kembali ke backend.
 
+### Kenapa frontend bisa terhubung ke backend?
+
+Frontend publik dan backend berjalan dalam aplikasi, host, dan port yang sama. Saat browser membuka `http://localhost:8080`, Spring Boot menyajikan `index.html`, CSS, dan JavaScript dari folder `static/`. JavaScript memanggil alamat relatif seperti `/api/projects`; browser otomatis mengirim request ke origin yang sama, yaitu `http://localhost:8080/api/projects`.
+
+Alur ini menggunakan **HTTP**, bukan koneksi langsung dari JavaScript ke PostgreSQL:
+
+1. Browser menjalankan `fetch()` dari `app.js`, misalnya ke `GET /api/projects`.
+2. Spring MVC menerima request dan mencocokkan method serta URL ke controller yang sesuai.
+3. Controller membaca data melalui repository (atau service bila ada aturan aplikasi yang perlu dijalankan).
+4. Spring mengubah hasil Java menjadi JSON dan mengirimkannya sebagai HTTP response.
+5. JavaScript membaca JSON tersebut dan mengisi bagian halaman seperti kartu project.
+
+Karena browser hanya berkomunikasi dengan server aplikasi, kredensial database tidak pernah dikirim ke browser. Penggunaan URL relatif dan satu origin juga membuat frontend dan API tidak memerlukan konfigurasi CORS terpisah pada penggunaan normal. Jika kelak frontend dipindah ke domain/port berbeda, aturan CORS dan alamat API perlu disesuaikan.
+
 ## Alur frontend ke backend
 
 ### Halaman publik
@@ -84,6 +98,22 @@ Spring mengubah objek Java yang dikembalikan controller menjadi JSON. JavaScript
 
 Form kontak mengirim JSON ke `POST /api/contact`. Sebelum mengirim, frontend mengambil token CSRF dari `GET /api/csrf`, lalu menyertakan token tersebut pada request. Backend memvalidasi isi pesan dan menyimpannya sebelum mencoba mengirim notifikasi email.
 
+Contoh satu siklus baca project:
+
+```text
+app.js
+  └─ fetch("/api/projects")
+       └─ GET /api/projects
+            └─ ProjectController.listPublicProjects()
+                 └─ ProjectRepository
+                      └─ PostgreSQL
+                 ← daftar Project
+            ← JSON (HTTP 200)
+       ← JavaScript merender kartu project
+```
+
+Request publik di atas tidak membutuhkan URL database atau password database di frontend. Yang digunakan browser hanya URL HTTP aplikasi.
+
 ### Dashboard admin
 
 `AdminController` menangani halaman `/admin` dan menu-menunya. Controller menyiapkan data yang diperlukan lalu mengembalikan view `admin`; Thymeleaf menggabungkan view itu dengan data sebelum HTML dikirim ke browser. Saat formulir admin dikirim, browser mengirim request POST yang diproses controller, data divalidasi/disimpan, lalu browser diarahkan kembali ke halaman admin.
@@ -92,10 +122,17 @@ Form upload menggunakan `multipart/form-data`. Berbeda dengan foto atau lagu yan
 
 ## Alur backend ke database
 
-1. **Controller** menerima HTTP request, membaca parameter/path/JSON/form, dan memilih operasi yang sesuai.
-2. **Service**, jika diperlukan, menjalankan aturan aplikasi. Contohnya `SiteContentService` memastikan konten halaman tunggal dan menyalin perubahan yang boleh disimpan.
-3. **Repository** berbasis `JpaRepository` menyediakan operasi simpan, baca, ubah, dan hapus. Spring Data JPA/Hibernate menerjemahkan pemanggilan repository menjadi SQL.
-4. **PostgreSQL** menyimpan record terstruktur. Hasil pembacaan dikembalikan melalui controller sebagai JSON untuk API atau sebagai data model untuk Thymeleaf.
+Koneksi ke PostgreSQL dikonfigurasi **di sisi backend** pada `application.properties`. Driver PostgreSQL tersedia sebagai dependency runtime di Maven. Saat aplikasi mulai, Spring Boot membaca `DB_URL`, `DB_USERNAME`, dan `DB_PASSWORD` (atau nilai default URL/user di konfigurasi), lalu menyiapkan koneksi database. Contoh URL lokalnya adalah `jdbc:postgresql://localhost:5432/scrapbook_portfolio`: `localhost` adalah host database, `5432` port PostgreSQL, dan bagian terakhir nama database. User database harus memiliki hak akses yang sesuai.
+
+Setelah koneksi tersedia, alur data berjalan seperti berikut:
+
+1. **Controller** menerima HTTP request, membaca path, JSON, parameter, atau field form, lalu menentukan operasi yang dilakukan.
+2. **Service**, bila dibutuhkan, menjalankan aturan aplikasi atau mengoordinasikan operasi data. Contohnya `SiteContentService` memastikan satu record konten halaman tersedia dan menyalin field yang boleh diperbarui.
+3. **Repository** berbasis Spring Data `JpaRepository` menyediakan operasi baca/simpan/perbarui/hapus. Pada beberapa fitur sederhana controller menggunakan repository langsung; fitur yang memiliki aturan khusus dapat melewati service.
+4. **Hibernate/JPA** memetakan entity Java ke tabel dan menerjemahkan operasi repository menjadi SQL melalui koneksi JDBC.
+5. **PostgreSQL** menyimpan record. Hasil query kembali ke controller, lalu disajikan sebagai JSON untuk API atau dimasukkan ke model Thymeleaf untuk HTML.
+
+Ringkasnya: **browser —HTTP/JSON→ Spring MVC —repository/JPA/JDBC→ PostgreSQL**. Jalur baliknya juga melalui lapisan yang sama. Browser tidak pernah membuat koneksi JDBC dan database tidak mengirim response langsung ke browser.
 
 Tabel utama yang dipetakan oleh entity:
 
@@ -114,25 +151,25 @@ File gambar/audio **tidak disimpan sebagai byte di PostgreSQL**. `ImageStorageSe
 
 ## MVC di proyek ini
 
-MVC adalah pola pemisahan **Model**, **View**, dan **Controller**. Dalam Spring MVC proyek ini, pola tersebut terutama terlihat pada halaman dashboard admin; endpoint API memakai controller Spring MVC yang sama tetapi mengembalikan data JSON, bukan view HTML.
+MVC adalah pola pemisahan tanggung jawab **Model**, **View**, dan **Controller**. Pada proyek ini, pola server-side MVC paling terlihat di dashboard admin yang dirender Thymeleaf. Halaman publik juga menggunakan controller Spring MVC, tetapi endpoint-nya mengembalikan JSON untuk dirender oleh JavaScript di browser (sering disebut pola REST/API).
 
 ### Model
 
-Model menggambarkan data dan aturan validasinya. Entity JPA menjadi representasi record database, misalnya `Project`, `SiteContent`, dan `ContactMessage`. Repository menyediakan akses penyimpanan untuk entity tersebut. Pada dashboard, data yang dibutuhkan view juga dikirim lewat `org.springframework.ui.Model`.
+Model menggambarkan data yang diproses aplikasi. Entity JPA seperti `Project`, `SiteContent`, `EducationEntry`, dan `ContactMessage` memetakan data ke record database, sekaligus dapat memiliki aturan validasi. Repository bukan view ataupun controller: repository adalah komponen akses data yang digunakan backend untuk membaca dan menyimpan model. Untuk halaman admin, `org.springframework.ui.Model` adalah wadah atribut yang dikirim controller kepada view; ini berbeda dari entity/model domain.
 
 ### View
 
-- **Publik:** `src/main/resources/static/index.html`, `styles.css`, dan `app.js`. Ini adalah halaman statis; konten dinamisnya diminta melalui API.
-- **Admin:** `src/main/resources/templates/admin.html` dan `login.html`. Thymeleaf merender nilai yang disiapkan controller ke dalam HTML.
+- **Publik:** `src/main/resources/static/index.html`, file CSS, dan `app.js`. HTML/CSS/JavaScript disajikan sebagai aset statis; JavaScript mengambil konten dinamis melalui API lalu memperbarui DOM browser.
+- **Admin:** `src/main/resources/templates/admin.html` dan `login.html`. Thymeleaf menggunakan atribut pada `Model` untuk merender HTML di server sebelum response dikirim ke browser.
 
 ### Controller
 
-- `AdminController`: halaman dashboard dan aksi formulir admin.
+- `AdminController`: menangani request halaman dashboard dan submit form admin; menyiapkan data pada `Model`, lalu memilih template atau redirect.
 - `SiteContentController`, `ProjectController`, `ToolboxController`, `EducationController`, `CertificateController`: API konten dan data portofolio.
-- `ContactController`: menerima pesan kontak dan menyediakan operasi pesan admin.
-- `LoginPageController`: halaman login.
+- `ContactController`: menerima serta memvalidasi request kontak, menyimpan pesan, dan memulai pengiriman notifikasi.
+- `LoginPageController`: memilih view halaman login; proses autentikasi dan otorisasi ditangani Spring Security.
 
-Dengan pemisahan ini, view tidak menjalankan query SQL. Controller menghubungkan request dengan service/repository, sedangkan data dan penyimpanannya berada di model/entity dan repository.
+Controller adalah penghubung, bukan tempat view mengakses SQL secara langsung. Untuk alur dashboard: browser mengirim request → controller mengambil/mengubah data melalui service atau repository → controller mengisi `Model` → Thymeleaf merender view → HTML dikirim kembali. Untuk alur API: browser mengirim request → controller mengambil data → Spring membuat response JSON → JavaScript memperbarui view publik. Pemisahan ini memudahkan perubahan tampilan tanpa menaruh query database di HTML/JavaScript.
 
 ## Struktur proyek
 
@@ -188,7 +225,6 @@ Endpoint berikut memerlukan role admin melalui Spring Security HTTP Basic:
 - `/admin` — dashboard.
 - `/admin/content` — teks, foto About, lagu hover, logo, dan tautan sosial.
 - `/admin/projects`, `/admin/education`, `/admin/certificates`, `/admin/toolbox` — pengelolaan konten terkait.
-- `/admin/appearance` — warna situs dan tema dashboard.
 - `/admin/messages` — melihat dan mengelola pesan.
 - `/admin/preview` — preview dashboard dalam mode baca.
 
@@ -249,9 +285,9 @@ JAR memuat backend dan frontend statis. Database PostgreSQL serta folder `upload
 
 - Secara default file disimpan di folder `uploads/` pada working directory aplikasi.
 - Atur `UPLOAD_DIR` untuk memilih lokasi lain. Pada deployment, gunakan volume persisten dan backup untuk direktori tersebut.
-- Gambar yang diterima: PNG, JPEG, GIF, WebP, serta format video yang didukung oleh upload project.
+- Upload foto menerima PNG, JPEG, GIF, atau WebP hingga 50 MB. Upload media project juga menerima MP4, WebM, atau MOV hingga 150 MB.
 - Lagu foto About menerima MP3, WAV, OGG, FLAC, atau M4A, maksimal 20 MB.
-- Backend membatasi ukuran file gambar/media umum hingga 50 MB; batas request multipart Spring Boot adalah 60 MB.
+- Batas request multipart Spring Boot dikonfigurasi maksimal 150 MB per file dan 160 MB per request; endpoint tertentu menerapkan batas lebih kecil sesuai jenis media.
 - File disajikan dari `/uploads/**`; database hanya menyimpan URL-nya.
 
 ## Keamanan dan deployment
