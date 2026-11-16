@@ -37,7 +37,6 @@
     uniform float uWarpStrength;
     uniform vec2 uPointer;
     uniform float uMouseInfluence;
-    uniform float uParallax;
     uniform float uNoise;
     uniform float uIntensity;
     uniform float uBandWidth;
@@ -46,7 +45,6 @@
     void main() {
       float t = uTime * 0.2;
       vec2 p = vUv * 2.0 - 1.0;
-      p += uPointer * uParallax * 0.1;
       vec2 rp = vec2(
         p.x * uRotation.x - p.y * uRotation.y,
         p.x * uRotation.y + p.y * uRotation.x
@@ -144,7 +142,6 @@
     warp: uniform("uWarpStrength"),
     pointer: uniform("uPointer"),
     mouseInfluence: uniform("uMouseInfluence"),
-    parallax: uniform("uParallax"),
     noise: uniform("uNoise"),
     intensity: uniform("uIntensity"),
     bandWidth: uniform("uBandWidth")
@@ -198,7 +195,6 @@
   gl.uniform1f(uniforms.frequency, 1);
   gl.uniform1f(uniforms.warp, 0.8);
   gl.uniform1f(uniforms.mouseInfluence, 0.65);
-  gl.uniform1f(uniforms.parallax, 0.5);
   gl.uniform1f(uniforms.noise, 0.08);
   gl.uniform1f(uniforms.intensity, 1.5);
   gl.uniform1f(uniforms.bandWidth, 3);

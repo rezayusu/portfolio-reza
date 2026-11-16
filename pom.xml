@@ -60,6 +60,23 @@
   </dependencies>
   <build>
     <finalName>scrapbook-portfolio</finalName>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>uploads</directory>
+        <targetPath>uploads</targetPath>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.jpg</include>
+          <include>**/*.jpeg</include>
+          <include>**/*.png</include>
+          <include>**/*.gif</include>
+          <include>**/*.webp</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

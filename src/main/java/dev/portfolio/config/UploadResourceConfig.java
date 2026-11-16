@@ -20,6 +20,6 @@ public class UploadResourceConfig implements WebMvcConfigurer {
             location += "/";
         }
         registry.addResourceHandler("/uploads/**")
-            .addResourceLocations(location);
+            .addResourceLocations(location, "classpath:/uploads/");
     }
 }

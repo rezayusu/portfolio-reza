@@ -2,6 +2,8 @@ package dev.portfolio.content;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -80,7 +82,12 @@ class AdminContentAppearanceTest {
             redirectAttributes);
 
         ArgumentCaptor<SiteContent> savedContent = ArgumentCaptor.forClass(SiteContent.class);
-        verify(contentService).update(savedContent.capture());
+        verify(contentService).updateWithProfilePhotos(
+            savedContent.capture(),
+            isNull(),
+            eq(false),
+            isNull(),
+            eq(false));
         assertThat(savedContent.getValue().getDisplayName()).isEqualTo("Updated name");
         assertThat(savedContent.getValue().getPrimaryColor()).isEqualTo("#123456");
         assertThat(savedContent.getValue().getAccentColor()).isEqualTo("#abcdef");
@@ -114,8 +121,47 @@ class AdminContentAppearanceTest {
             redirectAttributes);
 
         ArgumentCaptor<SiteContent> savedContent = ArgumentCaptor.forClass(SiteContent.class);
-        verify(contentService).update(savedContent.capture());
+        verify(contentService).updateWithProfilePhotos(
+            savedContent.capture(),
+            isNull(),
+            eq(false),
+            isNull(),
+            eq(false));
         assertThat(savedContent.getValue().getAboutHoverAudioUrl()).isEqualTo("/uploads/new-song.mp3");
+    }
+
+    @Test
+    void savesUploadedProfilePhotoToTheDatabase() {
+        when(contentService.getContent()).thenReturn(new SiteContent());
+        ProfilePhotoData photoData = new ProfilePhotoData(new byte[] { 1, 2, 3 }, "image/png");
+        when(imageStorage.readProfilePhoto(any(MultipartFile.class))).thenReturn(photoData);
+        SiteContent input = new SiteContent();
+        MockMultipartFile photo = new MockMultipartFile("photo", "profile.png", "image/png", new byte[] { 1 });
+
+        controller.updateContent(
+            input,
+            new BeanPropertyBindingResult(input, "content"),
+            false,
+            false,
+            false,
+            false,
+            photo,
+            new MockMultipartFile("secondPhoto", new byte[0]),
+            new MockMultipartFile("hoverAudio", new byte[0]),
+            new MockMultipartFile("logoPhoto", new byte[0]),
+            mock(Model.class),
+            mock(CsrfToken.class),
+            redirectAttributes);
+
+        ArgumentCaptor<SiteContent> savedContent = ArgumentCaptor.forClass(SiteContent.class);
+        verify(contentService).updateWithProfilePhotos(
+            savedContent.capture(),
+            eq(photoData),
+            eq(false),
+            isNull(),
+            eq(false));
+        assertThat(savedContent.getValue().getAboutPhotoUrl())
+            .isEqualTo("/api/site-content/photos/" + ProfilePhoto.PRIMARY_SLOT);
     }
 
     @Test

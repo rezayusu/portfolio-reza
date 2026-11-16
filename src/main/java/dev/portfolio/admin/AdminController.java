@@ -3,6 +3,8 @@ package dev.portfolio.admin;
 import dev.portfolio.contact.ContactMessageRepository;
 import dev.portfolio.certificate.Certificate;
 import dev.portfolio.certificate.CertificateRepository;
+import dev.portfolio.content.ProfilePhoto;
+import dev.portfolio.content.ProfilePhotoData;
 import dev.portfolio.content.SiteContent;
 import dev.portfolio.content.SiteContentService;
 import dev.portfolio.content.ImageStorageService;
@@ -15,6 +17,7 @@ import dev.portfolio.toolbox.ToolboxRepository;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Objects;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
@@ -219,15 +222,34 @@ public class AdminController {
             model.addAttribute("notice", "Periksa kembali isian konten yang ditandai.");
             return "admin";
         }
+        SiteContent existingContent = contentService.getContent();
+        ProfilePhotoData primaryPhoto = null;
+        ProfilePhotoData secondaryPhotoData = null;
+        boolean clearStoredPrimaryPhoto = clearPhoto;
+        boolean clearStoredSecondaryPhoto = clearSecondPhoto;
         if (photo != null && !photo.isEmpty()) {
-            content.setAboutPhotoUrl(imageStorage.store(photo));
+            primaryPhoto = imageStorage.readProfilePhoto(photo);
+            content.setAboutPhotoUrl("/api/site-content/photos/" + ProfilePhoto.PRIMARY_SLOT);
+            clearStoredPrimaryPhoto = false;
         } else if (clearPhoto) {
             content.setAboutPhotoUrl("");
+        } else if (Objects.equals(
+                existingContent.getAboutPhotoUrl(),
+                "/api/site-content/photos/" + ProfilePhoto.PRIMARY_SLOT)
+                && !Objects.equals(content.getAboutPhotoUrl(), existingContent.getAboutPhotoUrl())) {
+            clearStoredPrimaryPhoto = true;
         }
         if (secondPhoto != null && !secondPhoto.isEmpty()) {
-            content.setAboutPhotoSecondUrl(imageStorage.store(secondPhoto));
+            secondaryPhotoData = imageStorage.readProfilePhoto(secondPhoto);
+            content.setAboutPhotoSecondUrl("/api/site-content/photos/" + ProfilePhoto.SECONDARY_SLOT);
+            clearStoredSecondaryPhoto = false;
         } else if (clearSecondPhoto) {
             content.setAboutPhotoSecondUrl("");
+        } else if (Objects.equals(
+                existingContent.getAboutPhotoSecondUrl(),
+                "/api/site-content/photos/" + ProfilePhoto.SECONDARY_SLOT)
+                && !Objects.equals(content.getAboutPhotoSecondUrl(), existingContent.getAboutPhotoSecondUrl())) {
+            clearStoredSecondaryPhoto = true;
         }
         if (hoverAudio != null && !hoverAudio.isEmpty()) {
             content.setAboutHoverAudioUrl(imageStorage.storeAudio(hoverAudio));
@@ -239,7 +261,6 @@ public class AdminController {
         } else if (clearLogo) {
             content.setLogoUrl("");
         }
-        SiteContent existingContent = contentService.getContent();
         content.setPrimaryColor(existingContent.getPrimaryColor());
         content.setAccentColor(existingContent.getAccentColor());
         content.setBackgroundColor(existingContent.getBackgroundColor());
@@ -251,7 +272,12 @@ public class AdminController {
         content.setAdminDarkSidebar(existingContent.getAdminDarkSidebar());
         content.setAdminDarkHover(existingContent.getAdminDarkHover());
         content.setAdminDarkPanel(existingContent.getAdminDarkPanel());
-        contentService.update(content);
+        contentService.updateWithProfilePhotos(
+            content,
+            primaryPhoto,
+            clearStoredPrimaryPhoto,
+            secondaryPhotoData,
+            clearStoredSecondaryPhoto);
         redirectAttributes.addFlashAttribute("notice", "Konten portfolio berhasil diperbarui.");
         return "redirect:/admin/content";
     }

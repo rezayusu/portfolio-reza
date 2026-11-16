@@ -95,6 +95,11 @@ $("#year").textContent = new Date().getFullYear();
 
 const menuToggle = $("#menuToggle");
 const mainNav = $("#mainNav");
+$(".site-header .brand").addEventListener("dblclick", event => {
+  if (!event.target.closest("[data-logo-mark]")) return;
+  event.preventDefault();
+  window.location.assign("/login");
+});
 menuToggle.addEventListener("click", () => {
   const opened = mainNav.classList.toggle("open");
   menuToggle.setAttribute("aria-expanded", String(opened));
@@ -122,43 +127,6 @@ function observeMotionElements(root = document) {
   });
 }
 observeMotionElements();
-
-const parallaxSections = [...document.querySelectorAll(".hero, .section-block")];
-const scrollFadeSections = [...parallaxSections, ...document.querySelectorAll(".site-footer")];
-if (parallaxSections.length && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-  let parallaxFrame = 0;
-  const updateParallax = () => {
-    parallaxFrame = 0;
-    const viewportHeight = window.innerHeight;
-    scrollFadeSections.forEach(section => {
-      const bounds = section.getBoundingClientRect();
-      const visibleHeight = Math.max(0, Math.min(bounds.bottom, viewportHeight) - Math.max(bounds.top, 0));
-      const visibleRatio = visibleHeight / Math.min(bounds.height, viewportHeight);
-      section.style.setProperty("--scroll-fade", `${Math.min(1, visibleRatio / 0.65)}`);
-    });
-    parallaxSections.forEach(section => {
-      const bounds = section.getBoundingClientRect();
-      if (section.matches(".hero")) {
-        const scrollOffset = Math.max(0, Math.min(section.offsetHeight, -bounds.top));
-        section.style.setProperty("--hero-scroll", `${scrollOffset}px`);
-        section.style.setProperty("--hero-progress", `${scrollOffset / section.offsetHeight}`);
-        section.style.setProperty("--hero-background-shift", `${scrollOffset * 0.8}px`);
-      } else {
-        const sectionOffset = Math.max(
-          -260,
-          Math.min(260, bounds.top + bounds.height / 2 - window.innerHeight / 2)
-        );
-        section.style.setProperty("--section-parallax", `${sectionOffset}px`);
-        section.style.setProperty("--section-background-shift", `${sectionOffset * -0.95}px`);
-      }
-    });
-  };
-  window.addEventListener("scroll", () => {
-    if (!parallaxFrame) parallaxFrame = window.requestAnimationFrame(updateParallax);
-  }, { passive: true });
-  window.addEventListener("resize", updateParallax, { passive: true });
-  updateParallax();
-}
 
 function isVideoUrl(url = "") {
   return /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
@@ -230,8 +198,8 @@ let activeProjectFilter = "";
 
 function renderProjectFilters() {
   const filters = [
-    ["DKV", "DKV", projectsCache.filter(project => project.field === "DKV").length],
-    ["RPL", "RPL", projectsCache.filter(project => project.field === "RPL").length]
+    ["RPL", "RPL", projectsCache.filter(project => project.field === "RPL").length],
+    ["DKV", "DKV", projectsCache.filter(project => project.field === "DKV").length]
   ];
   if (!activeProjectFilter) {
     activeProjectFilter = filters.find(([, , count]) => count > 0)?.[0] || filters[0][0];

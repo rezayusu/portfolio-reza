@@ -56,9 +56,10 @@ Browser
                            ├─ Controller (routing/API)
                            ├─ Service (aturan aplikasi)
                            ├─ Repository (akses data)
-                           └─ ImageStorageService (file)
-                               ├─ PostgreSQL
-                               └─ folder uploads/
+                           ├─ ImageStorageService (penyimpanan media)
+                           │   ├─ PostgreSQL (foto profil dan gambar)
+                           │   └─ folder uploads/ (video dan audio)
+                           └─ UploadedImageController (/uploads/{filename})
 ```
 
 Kedua tampilan memakai backend yang sama, tetapi cara komunikasinya berbeda:
@@ -144,10 +145,12 @@ Tabel utama yang dipetakan oleh entity:
 | `EducationEntry` | `portfolio_education` |
 | `Certificate` | `portfolio_certificates` |
 | `ContactMessage` | `contact_messages` |
+| `ProfilePhoto` | `portfolio_profile_photos` |
+| `UploadedImage` | `portfolio_uploaded_images` |
 
 Hibernate dikonfigurasi dengan `spring.jpa.hibernate.ddl-auto=update`; saat aplikasi berjalan, Hibernate menyesuaikan skema berdasarkan entity. `SeedData` menambahkan contoh project dan toolbox hanya ketika tabel terkait masih kosong. Konten halaman dibuat saat pertama kali diminta jika belum tersedia.
 
-File gambar/audio **tidak disimpan sebagai byte di PostgreSQL**. `ImageStorageService` memeriksa tipe file, memberi nama acak, lalu menyimpan file ke folder upload; yang disimpan di entity/database adalah URL file tersebut. `UploadResourceConfig` memetakan URL `/uploads/**` ke folder upload agar file dapat dilayani browser.
+Foto profil utama dan kedua disimpan sebagai data biner di PostgreSQL (`portfolio_profile_photos`) dan dilayani lewat endpoint `/api/site-content/photos/{slot}`. Gambar lain disimpan di tabel `portfolio_uploaded_images` dan tetap dilayani melalui URL `/uploads/{filename}`. Saat build, file gambar yang tersedia di `uploads/` ikut dimasukkan ke JAR lalu diimpor ke database saat aplikasi mulai, agar URL lama tetap berfungsi setelah deployment. Video dan audio tetap disimpan sebagai file eksternal.
 
 ## MVC di proyek ini
 
@@ -199,6 +202,7 @@ src/
 | Method | Path | Kegunaan |
 |---|---|---|
 | `GET` | `/api/site-content` | Mengambil konten umum halaman |
+| `GET` | `/api/site-content/photos/{slot}` | Mengambil foto profil (`profile` atau `profile-second`) |
 | `GET` | `/api/projects` | Mengambil daftar project |
 | `GET` | `/api/toolbox` | Mengambil daftar toolbox |
 | `GET` | `/api/education` | Mengambil pendidikan secara kronologis |
@@ -279,16 +283,20 @@ mvn clean package
 java -jar target/scrapbook-portfolio.jar
 ```
 
-JAR memuat backend dan frontend statis. Database PostgreSQL serta folder `uploads/` tetap merupakan sumber daya eksternal dan harus tersedia di lingkungan tempat aplikasi berjalan.
+JAR memuat backend, frontend statis, dan foto yang ada di folder `uploads/` saat build. Database PostgreSQL tetap harus tersedia dan dikonfigurasi di lingkungan tempat aplikasi berjalan. Foto profil dan gambar lain dibaca dari database; video/audio tetap membutuhkan folder `uploads/` eksternal.
 
 ## Upload file
 
-- Secara default file disimpan di folder `uploads/` pada working directory aplikasi.
-- Atur `UPLOAD_DIR` untuk memilih lokasi lain. Pada deployment, gunakan volume persisten dan backup untuk direktori tersebut.
+- Foto profil dan file gambar disimpan di database.
+- `ProfilePhoto` dan `ProfilePhotoRepository` menyimpan foto About; `ProfilePhotoData` membawa data foto saat diproses, lalu `SiteContentController` menyajikannya melalui `/api/site-content/photos/{slot}`.
+- `UploadedImage` dan `UploadedImageRepository` menyimpan gambar upload; `UploadedImageController` menyajikannya melalui `/uploads/{filename}`. Untuk kompatibilitas, controller juga dapat membaca file dari `UPLOAD_DIR` atau resource `uploads/` di JAR.
+- `PackagedImageImporter` mengimpor gambar dari `uploads/` di JAR ke database saat aplikasi mulai, dan melewati file yang sudah tersimpan.
+- Video dan audio secara default disimpan di folder `uploads/` pada working directory aplikasi. Atur `UPLOAD_DIR` untuk memilih lokasi lain dan gunakan volume persisten pada deployment.
 - Upload foto menerima PNG, JPEG, GIF, atau WebP hingga 50 MB. Upload media project juga menerima MP4, WebM, atau MOV hingga 150 MB.
 - Lagu foto About menerima MP3, WAV, OGG, FLAC, atau M4A, maksimal 20 MB.
 - Batas request multipart Spring Boot dikonfigurasi maksimal 150 MB per file dan 160 MB per request; endpoint tertentu menerapkan batas lebih kecil sesuai jenis media.
-- File disajikan dari `/uploads/**`; database hanya menyimpan URL-nya.
+- Foto profil disajikan dari database lewat `/api/site-content/photos/profile` dan `/api/site-content/photos/profile-second`.
+- Gambar disajikan dari `/uploads/**`; video/audio disajikan dari folder upload yang harus tetap tersedia di deployment.
 
 ## Keamanan dan deployment
 

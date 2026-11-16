@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.mockito.ArgumentCaptor;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class SiteContentServiceTest {
     @Mock
     private SiteContentRepository repository;
+    @Mock
+    private ProfilePhotoRepository profilePhotoRepository;
 
     @Test
     void updatesStoredPortfolioCopyAndAppearance() {
@@ -48,7 +51,7 @@ class SiteContentServiceTest {
         input.setAdminDarkHover("#707172");
         input.setAdminDarkPanel("#808182");
 
-        SiteContent saved = new SiteContentService(repository).update(input);
+        SiteContent saved = new SiteContentService(repository, profilePhotoRepository).update(input);
 
         assertThat(saved.getDisplayName()).isEqualTo("Reza Updated");
         assertThat(saved.getHeroTagline()).isEqualTo("thoughtful things.");
@@ -70,6 +73,25 @@ class SiteContentServiceTest {
         assertThat(saved.getAdminDarkSidebar()).isEqualTo("#606162");
         assertThat(saved.getAdminDarkHover()).isEqualTo("#707172");
         assertThat(saved.getAdminDarkPanel()).isEqualTo("#808182");
+        verify(repository).save(existing);
+    }
+
+    @Test
+    void storesUploadedProfilePhotoInTheDatabase() {
+        SiteContent existing = new SiteContent();
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(repository.save(any(SiteContent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        SiteContent input = new SiteContent();
+        ProfilePhotoData photo = new ProfilePhotoData(new byte[] { 1, 2, 3 }, "image/png");
+
+        new SiteContentService(repository, profilePhotoRepository)
+            .updateWithProfilePhotos(input, photo, false, null, false);
+
+        ArgumentCaptor<ProfilePhoto> savedPhoto = ArgumentCaptor.forClass(ProfilePhoto.class);
+        verify(profilePhotoRepository).save(savedPhoto.capture());
+        assertThat(savedPhoto.getValue().getSlot()).isEqualTo(ProfilePhoto.PRIMARY_SLOT);
+        assertThat(savedPhoto.getValue().getContentType()).isEqualTo("image/png");
+        assertThat(savedPhoto.getValue().getData()).containsExactly(1, 2, 3);
         verify(repository).save(existing);
     }
 }

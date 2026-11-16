@@ -8,9 +8,11 @@ public class SiteContentService {
     private static final long CONTENT_ID = 1L;
 
     private final SiteContentRepository repository;
+    private final ProfilePhotoRepository profilePhotoRepository;
 
-    public SiteContentService(SiteContentRepository repository) {
+    public SiteContentService(SiteContentRepository repository, ProfilePhotoRepository profilePhotoRepository) {
         this.repository = repository;
+        this.profilePhotoRepository = profilePhotoRepository;
     }
 
     @Transactional
@@ -20,6 +22,16 @@ public class SiteContentService {
 
     @Transactional
     public SiteContent update(SiteContent input) {
+        return updateWithProfilePhotos(input, null, false, null, false);
+    }
+
+    @Transactional
+    public SiteContent updateWithProfilePhotos(
+            SiteContent input,
+            ProfilePhotoData primaryPhoto,
+            boolean clearPrimaryPhoto,
+            ProfilePhotoData secondaryPhoto,
+            boolean clearSecondaryPhoto) {
         SiteContent content = getContent();
         content.setDisplayName(input.getDisplayName());
         content.setHeroLine(input.getHeroLine());
@@ -46,6 +58,21 @@ public class SiteContentService {
         content.setAdminDarkSidebar(input.getAdminDarkSidebar());
         content.setAdminDarkHover(input.getAdminDarkHover());
         content.setAdminDarkPanel(input.getAdminDarkPanel());
+        updateProfilePhoto(ProfilePhoto.PRIMARY_SLOT, primaryPhoto, clearPrimaryPhoto);
+        updateProfilePhoto(ProfilePhoto.SECONDARY_SLOT, secondaryPhoto, clearSecondaryPhoto);
         return repository.save(content);
+    }
+
+    @Transactional(readOnly = true)
+    public ProfilePhoto getProfilePhoto(String slot) {
+        return profilePhotoRepository.findById(slot).orElse(null);
+    }
+
+    private void updateProfilePhoto(String slot, ProfilePhotoData photo, boolean clearPhoto) {
+        if (clearPhoto) {
+            profilePhotoRepository.deleteById(slot);
+        } else if (photo != null) {
+            profilePhotoRepository.save(new ProfilePhoto(slot, photo.contentType(), photo.data()));
+        }
     }
 }

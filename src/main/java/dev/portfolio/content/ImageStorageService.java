@@ -20,9 +20,13 @@ public class ImageStorageService {
     private static final long MAX_AUDIO_SIZE = 20 * 1024 * 1024;
 
     private final Path uploadDirectory;
+    private final UploadedImageRepository uploadedImageRepository;
 
-    public ImageStorageService(@Value("${portfolio.upload-dir:uploads}") String uploadDirectory) {
+    public ImageStorageService(
+            @Value("${portfolio.upload-dir:uploads}") String uploadDirectory,
+            UploadedImageRepository uploadedImageRepository) {
         this.uploadDirectory = Path.of(uploadDirectory).toAbsolutePath().normalize();
+        this.uploadedImageRepository = uploadedImageRepository;
     }
     
     public String store(MultipartFile image) {
@@ -31,6 +35,51 @@ public class ImageStorageService {
 
     public String storeImage(MultipartFile image) {
         return store(image, true);
+    }
+
+    public ProfilePhotoData readProfilePhoto(MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            return null;
+        }
+        if (image.getSize() > MAX_IMAGE_SIZE) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Foto maksimal 50 MB.");
+        }
+
+        try {
+            byte[] content = image.getBytes();
+            String extension = detectImageExtension(content);
+            if (extension == null || isVideoExtension(extension)) {
+                throw new ResponseStatusException(
+                    HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Gunakan gambar PNG, JPEG, GIF, atau WebP.");
+            }
+            return new ProfilePhotoData(content, imageContentType(extension));
+        } catch (IOException exception) {
+            throw new UncheckedIOException("Tidak dapat membaca foto profil yang diunggah.", exception);
+        }
+    }
+
+    private String imageContentType(String extension) {
+        return switch (extension) {
+            case ".png" -> "image/png";
+            case ".jpg" -> "image/jpeg";
+            case ".gif" -> "image/gif";
+            case ".webp" -> "image/webp";
+            default -> throw new IllegalArgumentException("Unsupported image extension: " + extension);
+        };
+    }
+
+    static String imageContentTypeForFilename(String filename) {
+        int extensionIndex = filename.lastIndexOf('.');
+        if (extensionIndex < 0) {
+            return null;
+        }
+        return switch (filename.substring(extensionIndex).toLowerCase()) {
+            case ".png" -> "image/png";
+            case ".jpg", ".jpeg" -> "image/jpeg";
+            case ".gif" -> "image/gif";
+            case ".webp" -> "image/webp";
+            default -> null;
+        };
     }
 
     private String store(MultipartFile image, boolean imageOnly) {
@@ -61,6 +110,12 @@ public class ImageStorageService {
             }
             if (!video && image.getSize() > MAX_IMAGE_SIZE) {
                 throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Foto maksimal 50 MB.");
+            }
+            if (!video) {
+                String filename = UUID.randomUUID() + extension;
+                uploadedImageRepository.save(
+                    new UploadedImage(filename, imageContentType(extension), image.getBytes()));
+                return "/uploads/" + filename;
             }
             Files.createDirectories(uploadDirectory);
             String filename = UUID.randomUUID() + extension;
