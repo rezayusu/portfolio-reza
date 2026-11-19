@@ -113,8 +113,7 @@ const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add("is-visible");
-    } else {
-      entry.target.classList.remove("is-visible");
+      observer.unobserve(entry.target);
     }
   });
 }, { threshold: 0.12 });
@@ -162,7 +161,7 @@ function renderProject(project, index) {
   const accentColor = /^#[0-9a-fA-F]{6}$/.test(project.accentColor || "") ? project.accentColor : "#f4d66d";
   const tech = (project.techStack || "").split(",").map(x => x.trim()).filter(Boolean).slice(0, 4);
   const field = ["DKV", "RPL"].includes(project.field) ? project.field : "";
-  const preview = `${image ? `<img loading="lazy" src="${escapeHtml(image)}" alt="${escapeHtml(project.title)} project preview">` : ""}${galleryVideo ? `<video class="project-preview-video" src="${escapeHtml(galleryVideo)}" muted loop playsinline preload="none" aria-hidden="true"></video>` : ""}`;
+  const preview = `${image ? `<img class="project-img-bg" src="${escapeHtml(image)}" alt="" aria-hidden="true" loading="lazy" decoding="async"><img class="project-img-main" loading="lazy" decoding="async" src="${escapeHtml(image)}" alt="${escapeHtml(project.title)} project preview">` : ""}${galleryVideo ? `<video class="project-preview-video" src="${escapeHtml(galleryVideo)}" muted loop playsinline preload="none" aria-hidden="true"></video>` : ""}`;
   return `<button class="project-card" type="button" data-project-id="${Number(project.id)}" data-project-field="${field}" style="--project-accent:${accentColor}" aria-label="View ${escapeHtml(project.title)} details">
     <div class="project-image">${preview}
       <span class="project-number">NO. 0${index + 1}</span></div>
@@ -319,6 +318,7 @@ async function loadSiteContent() {
     photoPlaceholder.classList.remove("has-photo-swap", "is-photo-swapped");
     const visiblePhotoUrl = photoUrl || secondPhotoUrl;
     if (visiblePhotoUrl) {
+      firstPhoto.decoding = "async";
       firstPhoto.src = visiblePhotoUrl;
       firstPhoto.style.display = "block";
       $("#photoInitial").style.display = "none";
@@ -359,7 +359,7 @@ async function loadToolbox() {
       const icon = safeUrl(tool.badgeImageUrl || "");
       const link = safeUrl(tool.badgeLink || "");
       const mark = icon
-        ? `<span class="tool-mark tool-icon"><img loading="lazy" src="${escapeHtml(icon)}" alt="${escapeHtml(tool.name)} icon"></span>`
+        ? `<span class="tool-mark tool-icon"><img loading="lazy" decoding="async" width="24" height="24" src="${escapeHtml(icon)}" alt="${escapeHtml(tool.name)} icon"></span>`
         : `<b class="tool-mark">${escapeHtml(tool.badge || "★")}</b>`;
       const sticker = `${mark}<span class="tool-name">${escapeHtml(tool.name)}</span>`;
       if (link) {
@@ -387,7 +387,7 @@ async function loadEducation() {
     timeline.innerHTML = educationCache.map((entry, index) => {
       const period = `${entry.startYear} — ${entry.endYear || "Now"}`;
       const image = safeUrl(entry.imageUrl || "");
-      return `<button class="education-card" type="button" data-education-index="${index}" aria-label="View details for ${escapeHtml(entry.schoolName)}"><span class="education-level">${escapeHtml(entry.level)}</span><span class="education-copy"><span class="education-period">${escapeHtml(period)}</span><span class="education-school-name">${escapeHtml(entry.schoolName)}</span>${image ? `<span class="education-photo-frame"><img class="education-photo" loading="lazy" src="${escapeHtml(image)}" alt=""></span>` : ""}${entry.program ? `<span class="education-program">${escapeHtml(entry.program)}</span>` : ""}${entry.description ? `<span class="education-description">${escapeHtml(entry.description)}</span>` : ""}</span></button>`;
+      return `<button class="education-card" type="button" data-education-index="${index}" aria-label="View details for ${escapeHtml(entry.schoolName)}"><span class="education-level">${escapeHtml(entry.level)}</span><span class="education-copy"><span class="education-period">${escapeHtml(period)}</span><span class="education-school-name">${escapeHtml(entry.schoolName)}</span>${image ? `<span class="education-photo-frame"><img class="education-photo" loading="lazy" decoding="async" width="160" height="120" src="${escapeHtml(image)}" alt=""></span>` : ""}${entry.program ? `<span class="education-program">${escapeHtml(entry.program)}</span>` : ""}${entry.description ? `<span class="education-description">${escapeHtml(entry.description)}</span>` : ""}</span></button>`;
     }).join("");
     observeMotionElements(timeline);
     timeline.querySelectorAll(".education-card").forEach(card => {
@@ -427,7 +427,7 @@ async function loadCertificates() {
     certificateGrid.innerHTML = certificates.map((certificate, index) => {
       const image = safeUrl(certificate.imageUrl || "");
       return `<article class="certificate-card" role="button" tabindex="0" data-certificate-index="${index}" aria-label="View details for ${escapeHtml(certificate.title)}">
-        <span class="certificate-image-frame">${image ? `<img class="certificate-image" loading="lazy" src="${escapeHtml(image)}" alt="">` : '<span class="certificate-stamp" aria-hidden="true">✧</span>'}</span>
+        <span class="certificate-image-frame">${image ? `<img class="certificate-image" loading="lazy" decoding="async" width="200" height="150" src="${escapeHtml(image)}" alt="">` : '<span class="certificate-stamp" aria-hidden="true">✧</span>'}</span>
         <div class="certificate-copy">
           <span class="certificate-year">${escapeHtml(certificate.issuedYear)}</span>
           <h3>${escapeHtml(certificate.title)}</h3>
@@ -592,9 +592,22 @@ contactForm?.addEventListener("submit", async event => {
     submit.disabled = false;
   }
 });
+contactForm?.addEventListener("focusin", () => {
+  if (!csrfToken || !csrfHeader) refreshCsrfToken().catch(() => {});
+}, { once: true });
+
 loadSiteContent();
-refreshCsrfToken().catch(error => console.error("Could not initialize the secure message form.", error));
 loadProjects();
-loadToolbox();
-loadEducation();
-loadCertificates();
+
+const initDeferred = () => {
+  loadToolbox();
+  loadEducation();
+  loadCertificates();
+  refreshCsrfToken().catch(() => {});
+};
+
+if ("requestIdleCallback" in window) {
+  requestIdleCallback(initDeferred, { timeout: 1000 });
+} else {
+  setTimeout(initDeferred, 100);
+}

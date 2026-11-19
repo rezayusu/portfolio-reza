@@ -160,10 +160,12 @@
   let height = 0;
   let pixelRatio = 1;
 
-  const resize = () => {
-    pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
-    width = Math.max(1, Math.floor(canvas.clientWidth * pixelRatio));
-    height = Math.max(1, Math.floor(canvas.clientHeight * pixelRatio));
+  const resize = rect => {
+    pixelRatio = Math.min(window.devicePixelRatio || 1, 1.25);
+    const w = (rect && rect.width) || window.innerWidth || 1;
+    const h = (rect && rect.height) || window.innerHeight || 1;
+    width = Math.max(1, Math.floor(w * pixelRatio));
+    height = Math.max(1, Math.floor(h * pixelRatio));
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
       canvas.height = height;
@@ -184,9 +186,16 @@
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   };
 
+  let lastDraw = 0;
+  const fpsInterval = 1000 / 30;
   const animate = now => {
-    draw(now);
-    if (!reducedMotion.matches) frame = requestAnimationFrame(animate);
+    if (!reducedMotion.matches && !document.hidden) {
+      frame = requestAnimationFrame(animate);
+      if (now - lastDraw >= fpsInterval) {
+        lastDraw = now - ((now - lastDraw) % fpsInterval);
+        draw(now);
+      }
+    }
   };
 
   gl.uniform1i(uniforms.colorCount, 3);
@@ -202,30 +211,55 @@
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.clearColor(0, 0, 0, 0);
 
-  const resizeObserver = new ResizeObserver(resize);
-  resizeObserver.observe(canvas);
-  window.addEventListener("resize", resize);
-  window.addEventListener("pointermove", event => {
-    const rect = canvas.getBoundingClientRect();
-    targetPointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    targetPointer.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+  const resizeObserver = new ResizeObserver(entries => {
+    if (entries[0] && entries[0].contentRect) {
+      resize(entries[0].contentRect);
+    } else {
+      resize();
+    }
   });
+  resizeObserver.observe(canvas);
+  window.addEventListener("resize", () => resize(), { passive: true });
+  window.addEventListener("pointermove", event => {
+    const w = window.innerWidth || 1;
+    const h = window.innerHeight || 1;
+    targetPointer.x = (event.clientX / w) * 2 - 1;
+    targetPointer.y = -((event.clientY / h) * 2 - 1);
+  }, { passive: true });
   window.addEventListener("blur", () => {
     targetPointer.x = 0;
     targetPointer.y = 0;
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      cancelAnimationFrame(frame);
+    } else if (!reducedMotion.matches) {
+      startedAt = performance.now();
+      lastDraw = performance.now();
+      frame = requestAnimationFrame(animate);
+    }
   });
   reducedMotion.addEventListener("change", () => {
     cancelAnimationFrame(frame);
     if (reducedMotion.matches) draw(0);
     else {
       startedAt = performance.now();
+      lastDraw = performance.now();
       frame = requestAnimationFrame(animate);
     }
   });
 
-  resize();
-  if (!reducedMotion.matches) {
-    startedAt = performance.now();
-    frame = requestAnimationFrame(animate);
+  const start = () => {
+    resize();
+    if (!reducedMotion.matches) {
+      startedAt = performance.now();
+      lastDraw = performance.now();
+      frame = requestAnimationFrame(animate);
+    }
+  };
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(start, { timeout: 1200 });
+  } else {
+    setTimeout(start, 250);
   }
 })();
