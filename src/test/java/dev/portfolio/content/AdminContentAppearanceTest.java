@@ -61,7 +61,7 @@ class AdminContentAppearanceTest {
 
         SiteContent input = new SiteContent();
         input.setDisplayName("Updated name");
-        input.setPrimaryColor("#ff8a76");
+        input.setPrimaryColor("#ad1010");
         input.setAccentColor("#a9c8a5");
         input.setBackgroundColor("#f6f0e5");
         input.setAboutHoverAudioUrl("/uploads/profile-song.mp3");
@@ -72,7 +72,7 @@ class AdminContentAppearanceTest {
             false,
             false,
             false,
-            false,
+             false,
             new MockMultipartFile("photo", new byte[0]),
             new MockMultipartFile("secondPhoto", new byte[0]),
             new MockMultipartFile("hoverAudio", new byte[0]),
